@@ -38,3 +38,12 @@ This is all written using the MIT License.
     ###### Header 6
 ```
 
+# See also
+
+There are probably many other Markdown parsers which are more
+optimal. But they don't fit the need we have (to be a part of a larger
+toolkit for literate programs in a tower of metalanguages).
+
+For example,
+[ocsiblog](https://github.com/mfp/ocsiblog/blob/master/simple_markup.ml)
+has a nifty parser in OCaml.

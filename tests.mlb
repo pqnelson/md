@@ -1,0 +1,6 @@
+$(SML_LIB)/basis/basis.mlb
+src/lexer.sig
+src/lexer.sml
+test/xunit.sml
+test/lexer_test.sml
+test/main.sml
