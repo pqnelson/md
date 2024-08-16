@@ -3,4 +3,8 @@ src/lexer.sig
 src/lexer.sml
 test/xunit.sml
 test/lexer_test.sml
+test/reporter.sig
+test/junit_tt.sml
+test/verbose_tt.sml
+test/runner.sml
 test/main.sml

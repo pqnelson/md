@@ -38,6 +38,13 @@ This is all written using the MIT License.
     ###### Header 6
 ```
 
+# Building this
+
+Right now, this works with MLton and MLkit.
+
+You could use [sml-buildscripts](https://github.com/cannam/sml-buildscripts)
+to support Poly/ML.
+
 # See also
 
 There are probably many other Markdown parsers which are more
