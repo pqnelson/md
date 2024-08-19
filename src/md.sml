@@ -88,65 +88,6 @@ element for HTML), and `![image description](url)`.
 @version 0.0.1
  *)
 
-fun serialize_inline elt =
-  case elt of
-      (Text s) => ("Text \""^s^"\"")
-    | (Emph x) => ("Emph "^(serialize_strings
-                                (map serialize_inline x)))
-    | (Bold x) => ("Bold "^(serialize_strings
-                                (map serialize_inline x)))
-    | (Code x) => "Code \""^x^"\""
-    | (Link {link_url,link_desc}) =>
-      ("Link {link_url=\""^
-       link_url^"\","^
-       "link_desc="^(serialize_strings
-                         (map serialize_inline link_desc))^"}")
-    | (Anchor x) => "Anchor \""^x^"\""
-    | (Image {img_src,img_alt}) => "Image {img_src=\""^
-                                   img_src^"\","^
-                                   "img_alt="^img_alt^"}";
-
-fun serialize_block (block : string Block) =
-    case block of
-        (Par items) => ("Par ["^
-                        (String.concatWith ", "
-                                           (map serialize_inline
-                                                items))^
-                         "]")
-  | (Pre (body,meta)) =>
-    (case meta of
-        NONE => ("Pre ("^body^", NONE)")
-     | (SOME m) => ("Pre ("^body^", SOME "^m^")"))
-  | (Heading (lvl, x)) =>
-    ("Heading ("^(Int.toString(lvl))^
-     ", [" ^
-     (String.concatWith "," (map serialize_inline x)) ^
-     "])")
-  | (Quote blocks) =>
-    ("Quote [" ^
-     (String.concatWith ", " (map serialize_block blocks)) ^
-     "]")
-  | (UList items) => 
-    ("UList [" ^
-     (String.concatWith
-          ", "
-          (map (fn subblocks =>
-                   "["^(String.concatWith ", "
-                                          (map serialize_block
-                                               subblocks))^"]")
-               items)) ^
-     "]")
-  | (OList items) =>
-    ("OList [" ^
-     (String.concatWith
-          ", "
-          (map (fn subblocks =>
-                   "["^(String.concatWith ", "
-                                          (map serialize_block
-                                               subblocks))^"]")
-               items)) ^
-     "]");
-
 structure Md : MD = struct
 (* parse_inline : string -> Inline list
 
@@ -160,7 +101,8 @@ Will skip over anything within $...$, \(...\), $$...$$, \[...\],
 or other LaTeX macrkup, and treat these as "just" text.
  *)
 
-(*
+(* TODO:
+
 Inline code, for Github pages, uses `code snippet`{:.language}
 for highlighting inline code. This seems fine, I should try to
 adhere to this spec.
@@ -483,6 +425,7 @@ and parse_list (lines : string list)
         in
           map trim_line lines
         end;
+    (* separate the list from the rest of the Markdown *)
     val (item_lines, rest) =
         case list_indexof (not o is_item) lines of
             SOME i => (List.take (lines, i+1),
@@ -496,6 +439,8 @@ and parse_list (lines : string list)
              SOME i => part_items (List.drop(t, i))
                                   ((List.take(ls, i+1))::acc)
            | NONE => rev (ls::acc));
+    (* recursively trim then parse each item for its block
+       structure *)
     val items = map (fn (item_lines : string list) =>
                         parse_block (trim_item item_lines))
                     (part_items item_lines []);
@@ -524,29 +469,30 @@ and olist (lines : string list) =
 (* parse_block : string list -> string Block list *)
 and parse_block lines =
   let
-    fun parse_iter acc = (fn [] => rev acc
-                         | (lines as line::_) =>
-                           if blank_line line
-                           then parse_iter acc (tl lines)
-                           else 
-                             let
-                               val (block, rest) =
-                                   if String.isPrefix "#" line
-                                   then header lines
-                                   else if String.isPrefix ">" line
-                                   then blockquote lines
-                                   else if String.isPrefix "```" line
-                                   then pre lines
-                                   else if String.isPrefix "- " line
-                                   then ulist lines #"-"
-                                   else if String.isPrefix "+ " line
-                                   then ulist lines #"+"
-                                   else if starts_olist line
-                                   then olist lines
-                                   else par lines;
-                             in
-                               parse_iter (block::acc) rest
-                             end)
+    fun parse_iter acc =
+        (fn [] => rev acc
+          | (lines as line::_) =>
+            if blank_line line
+            then parse_iter acc (tl lines)
+            else 
+              let
+                val (block, rest) =
+                    if String.isPrefix "#" line
+                    then header lines
+                    else if String.isPrefix ">" line
+                    then blockquote lines
+                    else if String.isPrefix "```" line
+                    then pre lines
+                    else if String.isPrefix "- " line
+                    then ulist lines #"-"
+                    else if String.isPrefix "+ " line
+                    then ulist lines #"+"
+                    else if starts_olist line
+                    then olist lines
+                    else par lines;
+              in
+                parse_iter (block::acc) rest
+              end)
   in
     parse_iter [] lines
   end;

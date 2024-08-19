@@ -61,3 +61,7 @@ datatype ('a, 'b) Either = Left of 'a
 it back into the REPL *)
 fun serialize_strings (strings : string list) =
     "["^(String.concatWith ", " strings)^"]";
+
+(* id : 'a -> 'a
+The fabled identity function. *)
+fun id x = x;

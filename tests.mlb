@@ -3,6 +3,8 @@ src/utils.sml
 src/lexer.sig
 src/lexer.sml
 src/md.sig
+src/inline.sml
+src/block.sml
 src/md.sml
 test/xunit.sml
 test/lexer_test.sml

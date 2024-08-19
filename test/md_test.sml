@@ -1,3 +1,6 @@
+fun serialize_block (block : string Block) =
+    Block.serialize id block;
+
 fun assert_ast_eq (expected : string Block list)
                   (lines : string list) =
     (fn () =>
