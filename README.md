@@ -15,20 +15,22 @@ This is all written using the MIT License.
 # Supported fragment
 
 ```
-    *italics*
     _italics_
     **bold**
-    __bold__
-    ***italicized bold***
+    _**italicized bold**_
+    **_emboldened(?) italics_**
     [this is a link](url)
     `inline code`
-    <!-- comment -->
     
     ```language
     code
     ```
     
     > block quote
+    
+    - unordered lists
+    + alt unordered lists
+    1. ordered lists
     
     # Header 1
     ## Header 2

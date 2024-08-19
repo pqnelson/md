@@ -1,8 +1,12 @@
 $(SML_LIB)/basis/basis.mlb
+src/utils.sml
 src/lexer.sig
 src/lexer.sml
+src/md.sig
+src/md.sml
 test/xunit.sml
 test/lexer_test.sml
+test/md_test.sml
 test/reporter.sig
 test/junit_tt.sml
 test/verbose_tt.sml
