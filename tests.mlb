@@ -6,9 +6,12 @@ src/md.sig
 src/inline.sml
 src/block.sml
 src/md.sml
+src/emitter.sig
+src/html5.sml
 test/xunit.sml
 test/lexer_test.sml
 test/md_test.sml
+test/html5_test.sml
 test/reporter.sig
 test/junit_tt.sml
 test/verbose_tt.sml
