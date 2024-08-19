@@ -54,7 +54,7 @@ namely the `html5` function. It expects a string representation of the
 Markdown as well as the header and footer elements you want to include,
 then it will emit the HTML5 as a string.
 
-See the [unit tests](./tests/html5_test.sml) for example usage.
+See the [unit tests](./test/html5_test.sml) for example usage.
 
 # See also
 
