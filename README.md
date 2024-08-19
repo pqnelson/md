@@ -56,6 +56,12 @@ then it will emit the HTML5 as a string.
 
 See the [unit tests](./test/html5_test.sml) for example usage.
 
+Right now, there's a [md.mlb](./md.mlb) file which will construct a `md`
+binary. It will take the name of `input.md` files, then produce
+`input.html` output files. (The output file is determined by checking if
+the input is a name that ends with `.md` --- and then replacing it with
+`.html`; otherwise, it just appends a `.html` to whatever the input name is.)
+
 # See also
 
 There are probably many other Markdown parsers which are more
