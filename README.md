@@ -47,6 +47,15 @@ Right now, this works with MLton and MLkit.
 You could use [sml-buildscripts](https://github.com/cannam/sml-buildscripts)
 to support Poly/ML.
 
+# Using this
+
+The function you want to look at is in [html5.sml](src/html5.sml),
+namely the `html5` function. It expects a string representation of the
+Markdown as well as the header and footer elements you want to include,
+then it will emit the HTML5 as a string.
+
+See the [unit tests](./tests/html5_test.sml) for example usage.
+
 # See also
 
 There are probably many other Markdown parsers which are more
