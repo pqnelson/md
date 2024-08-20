@@ -1,3 +1,8 @@
+(*
+TODO: Look at the POSIX utility conventions for formatting
+flags, https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
+*)
+
 fun is_md "" = false
   | is_md file_name = String.isSuffix ".md" (string_to_lower file_name);
 

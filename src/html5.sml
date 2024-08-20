@@ -23,25 +23,20 @@ fun emit_inline elt =
                                      img_alt ^
                                      "\" />");
 
-val escape_html =
-  String.translate (fn #"&" => "&amp;"
-                   | #"<" => "&lt;"
-                   | #">" => "&gt;"
-                   | #"\"" => "&quot;"
-                   | #"'" => "&apos;"
-                   | c => String.str c);
-
 (*
 (syntax_highlight : 'a -> string) (block : 'a Block)
+
+Note that `<pre>` should NOT have a newline separating it from
+the code.
 *)
 fun emit_block syntax_highlight block =
     case block of
         Par elts => ("\n<p>\n" ^
                      (concat (map emit_inline elts)) ^
                      "\n</p>\n")
-      | Pre (code,meta) => ("\n<pre>\n"^
+      | Pre (code,meta) => ("\n<pre>"^
                             (syntax_highlight code) ^
-                            "\n</pre>\n")
+                            "</pre>\n")
       | Heading (lvl, title) =>
         ("\n<h" ^
          (Int.toString lvl) ^
@@ -93,14 +88,20 @@ val generic_header = concat
   , "\n"
   ];
 
+val escape_html =
+  String.translate (fn #"&" => "&amp;"
+                   | #"<" => "&lt;"
+                   | #">" => "&gt;"
+                   | #"\"" => "&quot;"
+                   | #"'" => "&apos;"
+                   | c => String.str c);
+
 fun html5 (s : string) (header : string) (footer : string) =
     generic_header ^
     header ^
-    "\n<link href=\"style.css\" rel=\"stylesheet\" "^
-    "type=\"text/css\" >"^
     "\n</head>\n<body>\n" ^
     "<main>\n" ^
-    (Html5.emit id (Md.parse s)) ^
+    (Html5.emit escape_html (Md.parse s)) ^
     "\n" ^
     footer ^
     "</main>\n" ^
