@@ -4,6 +4,7 @@ test/xunit.sml
 test/lexer_test.sml
 test/md_test.sml
 test/html5_test.sml
+test/utils_test.sml
 test/reporter.sig
 test/junit_tt.sml
 test/verbose_tt.sml

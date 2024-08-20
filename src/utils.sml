@@ -1,6 +1,9 @@
 (**
 Utility functions which are found in every other programming
 language.
+
+The convention is to name them as `<module>_<function name>`,
+all lowercased with `snake_case`.
 *)
 
 (* list_indexof : ('a -> bool) -> 'a list -> int option
@@ -65,3 +68,40 @@ fun serialize_strings (strings : string list) =
 (* id : 'a -> 'a
 The fabled identity function. *)
 fun id x = x;
+
+
+val string_to_lower =
+    String.translate (String.str o Char.toLower);
+
+val string_to_upper =
+    String.translate (String.str o Char.toUpper);
+
+(* trim_s : string -> string
+
+Removes all leading and trailing whitespace.
+
+Examples:
+  string_trim "  foo" = "foo";
+  string_trim "bar and eggs   " = "bar and eggs";
+  string_trim "    spam eggs" = "spam eggs";
+  string_trim "unchanged string" = "unchanged string";
+*)
+fun string_trim str =
+    let
+      fun pre_trim_iter "" = ""
+        | pre_trim_iter s = 
+          if Char.isSpace (String.sub(s,0))
+          then pre_trim_iter (String.extract(s,1,NONE))
+          else s;
+      fun post_trim_iter "" = ""
+        | post_trim_iter s =
+          let
+            val len = String.size s;
+          in
+            if Char.isSpace (String.sub(s,len-1))
+            then post_trim_iter(String.substring(s,0,len-1))
+            else s
+          end;
+    in
+      post_trim_iter (pre_trim_iter str)
+    end;
