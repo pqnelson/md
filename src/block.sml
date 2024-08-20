@@ -1,9 +1,3 @@
-signature BLOCK = sig
-  val map : ('a Block -> 'b Block) -> 'a Block -> 'b Block;
-  val app : ('a Block -> unit) -> 'a Block -> unit;
-  val serialize : ('a -> string) -> 'a Block -> string;
-end;
-
 structure Block : BLOCK = struct
 fun map (f : 'a Block -> 'b Block) (block : 'a Block) : 'b Block =
     case block of

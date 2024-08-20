@@ -1,13 +1,5 @@
 $(SML_LIB)/basis/basis.mlb
-src/utils.sml
-src/lexer.sig
-src/lexer.sml
-src/md.sig
-src/inline.sml
-src/block.sml
-src/md.sml
-src/emitter.sig
-src/html5.sml
+common.mlb
 test/xunit.sml
 test/lexer_test.sml
 test/md_test.sml

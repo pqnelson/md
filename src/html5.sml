@@ -96,10 +96,14 @@ val generic_header = concat
 fun html5 (s : string) (header : string) (footer : string) =
     generic_header ^
     header ^
+    "\n<link href=\"style.css\" rel=\"stylesheet\" "^
+    "type=\"text/css\" >"^
     "\n</head>\n<body>\n" ^
+    "<main>\n" ^
     (Html5.emit id (Md.parse s)) ^
     "\n" ^
     footer ^
+    "</main>\n" ^
     "\n</body>\n" ^
     "</html>\n";
         

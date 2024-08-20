@@ -1,9 +1,3 @@
-signature INLINE = sig
-  val map : (Inline -> Inline) -> Inline -> Inline;
-  val app : (Inline -> unit) -> Inline -> unit;
-  val serialize : Inline -> string;
-end;
-
 structure Inline : INLINE = struct
 
 fun map (f : Inline -> Inline) (elt : Inline) : Inline =

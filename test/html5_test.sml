@@ -1,3 +1,15 @@
+fun html5 (s : string) (header : string) (footer : string) =
+    generic_header ^
+    header ^
+    "\n</head>\n<body>\n" ^
+    "<main>\n" ^
+    (Html5.emit id (Md.parse s)) ^
+    "\n" ^
+    footer ^
+    "</main>\n" ^
+    "\n</body>\n" ^
+    "</html>\n";
+
 fun html5_test name 
                (expected_lines : string list)
                (actual_lines : string list) =
@@ -23,7 +35,7 @@ fun html5_test name
 val html5_test1 =
 html5_test "simple_html5_test1"
            [generic_header,
-            "\n</head>\n<body>\n",
+            "\n</head>\n<body>\n<main>\n",
             "\n<h1> Introduction\n</h1>\n",
             "\n<p>\n",
             "These open the file named name for input and \n",
@@ -35,7 +47,7 @@ html5_test "simple_html5_test1"
             "stream cannot be opened on the given file, or in\n",
             " the case of openIn, the file name does not exist.",
             "\n</p>\n",
-            "\n\n</body>\n",
+            "\n</main>\n\n</body>\n",
             "</html>\n"]
            ["# Introduction",
             "",
