@@ -55,6 +55,33 @@ fun string_indexof sub s =
     string_indexof_iter sub s (String.size s) 0
 end;
 
+(* string_replace_all : string -> string -> string
+
+Given a `sub` string which possibly appears in `s`, replace all
+instances of them in `s` by a `new` string.
+
+If `sub` is not a substring of `s`, then `s` is returned
+unchanged.
+*)
+local
+  fun str_replace_iter sub s new len acc =
+      case string_indexof sub s of
+          NONE => acc ^ s
+                            (* s = pre ^ sub ^ post *)
+        | SOME i =>
+          let
+            val pre = String.substring(s,0,i);
+            val post = String.extract(s,i+len,NONE);
+          in 
+            str_replace_iter sub post new len (acc^pre^new)
+          end;
+in
+fun string_replace_all sub s new =
+    if not String.isSubstring sub s
+    then s
+    else str_replace_iter sub s new (String.size sub) ""
+end;
+
 (* Right is the result for the "correct" situation,
  Left is the result for the "erroneous" situation. *)
 datatype ('a, 'b) Either = Left of 'a
@@ -105,3 +132,11 @@ fun string_trim str =
     in
       post_trim_iter (pre_trim_iter str)
     end;
+
+fun is_md "" = false
+  | is_md file_name = String.isSuffix ".md" (string_to_lower file_name);
+
+fun md_to_html s =
+    if is_md s
+    then (String.substring(s, 0, String.size(s) - 2) ^ "html")
+    else s;

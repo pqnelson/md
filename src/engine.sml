@@ -3,9 +3,6 @@ TODO: Look at the POSIX utility conventions for formatting
 flags, https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
 *)
 
-fun is_md "" = false
-  | is_md file_name = String.isSuffix ".md" (string_to_lower file_name);
-
 (* output_file : string -> string -> string
 
 Determine the output file's name given the `input_name` of the
@@ -16,26 +13,17 @@ WARNING: this will OVERWRITE any pre-existing HTML files.
 *)
 fun output_file input_name "" =
     (if is_md input_name
-     then (String.substring(input_name,0,String.size(input_name)-2)^
-           "html")
+     then md_to_html input_name
      else input_name^".html")
   | output_file input_name output_path =
     (if OS.FileSys.isDir output_path
      then (let
             val p = OS.FileSys.fullPath output_path;
-            val len = String.size(input_name);
-            val name = (if String.isSuffix ".md" (string_to_lower input_name)
-                        then (String.substring(input_name,
-                                               0,
-                                               len - 2)^
-                              "html")
-                        else input_name^".html");
+            val name = output_file input_name "";
           in
             OS.Path.fromUnixPath
                 ((OS.Path.toUnixPath p) ^"/"^
                  (OS.Path.file name))
-            (* (OS.Path.joinDirFile { dir = p
-                                 , file = name}) *)
           end)
      else if String.isSuffix ".html" (string_to_lower output_path)
      then output_path

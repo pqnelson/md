@@ -1,4 +1,13 @@
 
+
+val escape_html =
+  String.translate (fn #"&" => "&amp;"
+                   | #"<" => "&lt;"
+                   | #">" => "&gt;"
+                   | #"\"" => "&quot;"
+                   | #"'" => "&apos;"
+                   | c => String.str c);
+
 structure Html5 : EMITTER = struct
 fun emit_inline elt =
     case elt of
@@ -9,10 +18,12 @@ fun emit_inline elt =
       | Bold x => ("<b>" ^
                    (concat (map emit_inline x)) ^
                    "</b>")
-      | Code x => ("<code>" ^ x ^ "</code>")
+      | Code x => ("<code>" ^ (escape_html x) ^ "</code>")
       | Link {link_url,link_desc} =>
         ("<a href=\"" ^
-         link_url ^
+         (if is_md link_url
+          then md_to_html link_url
+          else link_url)^
          "\">" ^
          (concat (map emit_inline link_desc)) ^
          "</a>")
@@ -87,14 +98,6 @@ val generic_header = concat
   , "<meta name=\"viewport\" content=\"width=device-width\" />"
   , "\n"
   ];
-
-val escape_html =
-  String.translate (fn #"&" => "&amp;"
-                   | #"<" => "&lt;"
-                   | #">" => "&gt;"
-                   | #"\"" => "&quot;"
-                   | #"'" => "&apos;"
-                   | c => String.str c);
 
 fun html5 (s : string) (header : string) (footer : string) =
     generic_header ^
