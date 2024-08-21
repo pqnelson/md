@@ -2,7 +2,7 @@ A Markdown parser written in Standard ML. It emits valid HTML 5.
 
 This isn't full Markdown, but a "common sense" subset of Markdown. The
 supported fragment supports a lot, but not all, of Markdown (notably,
-**not** lists, images, tables).
+**not** tables).
 
 The goal is to use this as part of a larger tool for literate
 programming where we are developing a _tower_ of metalanguages for doing
@@ -20,6 +20,7 @@ This is all written using the MIT License.
     _**italicized bold**_
     **_emboldened(?) italics_**
     [this is a link](url)
+    ![image description](url)
     `inline code`
     
     ```language
@@ -29,8 +30,13 @@ This is all written using the MIT License.
     > block quote
     
     - unordered lists
+    - item 2
+    
     + alt unordered lists
+    + item 2
+    
     1. ordered lists
+    2. item
     
     # Header 1
     ## Header 2
@@ -46,6 +52,39 @@ Right now, this works with MLton and MLkit.
 
 You could use [sml-buildscripts](https://github.com/cannam/sml-buildscripts)
 to support Poly/ML.
+
+Simply run:
+
+```bash
+md$ mlton md.mlb
+md$ ./md
+
+md --- converts a markdown file to HTML5
+
+Optional arguments:
+
+--css <dir>, --css=<dir> will include all the CSS files
+    found in the directory. Accepts comma-separated
+    values (with NO SPACES), or multiple appearances.
+
+--output <path>, --output=<path> will produce the HTML
+    file(s) in the path
+    NOTE: at most one --output option allowed
+
+--r <dir>, --r=<dir> will recursively build all HTML files
+    for each .md file found in the directory, then move
+    to all subdirectories. Accepts comma-separated
+    values (with NO SPACES), or multiple appearances.
+    
+    NOTE: when combined with --output, this will create
+    correspondingly named directories in the --output's dir
+    (if needed).
+
+Example: to recursively build everything found in directories
+'lab00', 'lab01', 'lab02' and produce output in corresponding
+subdirectories of 'docs/', run:
+    md --output docs --r lab00,lab01,lab02
+```
 
 # Using this
 
