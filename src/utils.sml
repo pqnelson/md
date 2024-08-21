@@ -66,18 +66,17 @@ unchanged.
 local
   fun str_replace_iter sub s new len acc =
       case string_indexof sub s of
-          NONE => acc ^ s
-                            (* s = pre ^ sub ^ post *)
-        | SOME i =>
+          NONE => (acc ^ s)
+        | SOME i => (* s = pre ^ sub ^ post *)
           let
             val pre = String.substring(s,0,i);
             val post = String.extract(s,i+len,NONE);
           in 
-            str_replace_iter sub post new len (acc^pre^new)
+            str_replace_iter sub post new len (acc ^ pre ^ new)
           end;
 in
 fun string_replace_all sub s new =
-    if not String.isSubstring sub s
+    if not (String.isSubstring sub s)
     then s
     else str_replace_iter sub s new (String.size sub) ""
 end;

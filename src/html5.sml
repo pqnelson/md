@@ -8,10 +8,17 @@ val escape_html =
                    | #"'" => "&apos;"
                    | c => String.str c);
 
+
+fun replace_em_dash s =
+    string_replace_all "---" s "&mdash;";
+
+fun replace_en_dash s =
+    string_replace_all "--" s "&ndash;";
+
 structure Html5 : EMITTER = struct
 fun emit_inline elt =
     case elt of
-        Text x => x
+        Text x => replace_en_dash (replace_em_dash x)
       | Emph x => ("<i>" ^
                    (concat (map emit_inline x)) ^
                    "</i>")
@@ -39,15 +46,24 @@ fun emit_inline elt =
 
 Note that `<pre>` should NOT have a newline separating it from
 the code.
+
+REQUIRES: `syntax_highlight` MUST perform HTML escaping for
+the usual entities (#"<", #">", #"&", #"\"", etc.). 
 *)
 fun emit_block syntax_highlight block =
     case block of
         Par elts => ("\n<p>\n" ^
                      (concat (map emit_inline elts)) ^
                      "\n</p>\n")
-      | Pre (code,meta) => ("\n<pre>"^
+      | Pre (code,NONE) => ("\n<pre>"^
                             (syntax_highlight code) ^
                             "</pre>\n")
+      | Pre (code,SOME language) =>
+        ("\n<pre data-lang=\""^
+         language^
+         "\" class=\"src\">" ^
+         (syntax_highlight code) ^
+         "</pre>\n")
       | Heading (lvl, title) =>
         ("\n<h" ^
          (Int.toString lvl) ^
