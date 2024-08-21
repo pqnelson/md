@@ -68,7 +68,7 @@ fun emit_block syntax_highlight block =
         ("\n<h" ^
          (Int.toString lvl) ^
          ">" ^
-         (concat (map emit_inline title))^
+         ((string_trim o concat) (map emit_inline title))^
          "</h" ^
          (Int.toString lvl) ^
          ">\n")

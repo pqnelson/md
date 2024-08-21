@@ -102,7 +102,7 @@ val string_to_lower =
 val string_to_upper =
     String.translate (String.str o Char.toUpper);
 
-(* trim_s : string -> string
+(* string_trim : string -> string
 
 Removes all leading and trailing whitespace.
 

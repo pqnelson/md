@@ -36,7 +36,7 @@ val html5_test1 =
 html5_test "simple_html5_test1"
            [generic_header,
             "\n</head>\n<body>\n<main>\n",
-            "\n<h1> Introduction\n</h1>\n",
+            "\n<h1>Introduction</h1>\n",
             "\n<p>\n",
             "These open the file named name for input and \n",
             "output, respectively. If name is a relative \n",
@@ -65,7 +65,7 @@ val html5_test2 =
 html5_test "simple_html5_test2"
            [generic_header,
             "\n</head>\n<body>\n<main>\n",
-            "\n<h1> Introduction <a id=\"anchor-for-introduction\"></a>\n</h1>\n",
+            "\n<h1>Introduction <a id=\"anchor-for-introduction\"></a></h1>\n",
             "\n<p>\n",
             "These open the file named name for input and \n",
             " the case of openIn, the file name does not exist.",
