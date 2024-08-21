@@ -40,6 +40,16 @@ val header_test2 =
               "",
               "Blah Blah Blah"];
 
+val header_test3 =
+    ast_test "header_test3"
+             [Heading (1, [Text " This is another example ",
+                           Anchor "anchor-for-header",
+                           Text "\n"]),
+              Par [Text "Blah Blah Blah"]]
+             ["# This is another example [#anchor-for-header]",
+              "",
+              "Blah Blah Blah"];
+
 val bq_test1 =
     ast_test "blockquote_test1"
              [Quote [Quote [Par [Text "This is another example"]],
@@ -180,6 +190,7 @@ register_suite "md_utils_test/" [
 register_suite "md_test/" [
   header_test1
 , header_test2
+, header_test3
 , bq_test1
 , bq_test2
 , bq_test3

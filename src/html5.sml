@@ -34,7 +34,7 @@ fun emit_inline elt =
          "\">" ^
          (concat (map emit_inline link_desc)) ^
          "</a>")
-      | Anchor x => ("<a id=\""^x^"\" />")
+      | Anchor x => ("<a id=\""^x^"\"></a>")
       | Image {img_src, img_alt} => ("<img src=\"" ^
                                      img_src ^
                                      "\" alt=\"" ^

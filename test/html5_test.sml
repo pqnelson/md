@@ -61,7 +61,27 @@ html5_test "simple_html5_test1"
             " the case of openIn, the file name does not exist."
            ];
 
+val html5_test2 =
+html5_test "simple_html5_test2"
+           [generic_header,
+            "\n</head>\n<body>\n<main>\n",
+            "\n<h1> Introduction <a id=\"anchor-for-introduction\"></a>\n</h1>\n",
+            "\n<p>\n",
+            "These open the file named name for input and \n",
+            " the case of openIn, the file name does not exist.",
+            "\n</p>\n",
+            "\n</main>\n\n</body>\n",
+            "</html>\n"]
+           ["# Introduction [#anchor-for-introduction]",
+            "",
+            "These open the file named name for input and ",
+            " the case of openIn, the file name does not exist."
+           ];
+
+
+
 
 register_suite "html5_test/" [
   html5_test1
+, html5_test2
 ];
