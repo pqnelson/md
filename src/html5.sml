@@ -1,12 +1,25 @@
 
 
+(* escape_html : string -> string
+
+Escapes the usual HTML entities, plus ones which might
+accidentally be captured as TeX start/end delimiters. I have
+intentionally added `&#xfeff;` after dollar signs and back
+slashes to interrupt things.
+
+**NOT idempotent.**
+
+This is intended to be the default which a syntax highlighter
+should replace.
+*)
 val escape_html =
   String.translate (fn #"&" => "&amp;"
                    | #"<" => "&lt;"
                    | #">" => "&gt;"
                    | #"\"" => "&quot;"
                    | #"'" => "&apos;"
-                   | #"$" =>  "&dollar;"
+                   | #"$" =>  "&dollar;&#xfeff;"
+                   | #"\\" => "&bsol;&#xfeff;" 
                    | c => String.str c);
 
 (* pprint : string -> string
@@ -16,11 +29,12 @@ environment, and replace certain patterns with their intended
 HTML entity (like "---" with an em-dash).
 
 This is idempotent.
- *)
+*)
 fun pprint s =
     foldl (fn ((raw,replace),acc) =>
               string_replace_all raw acc replace)
           s
+          (* order matters, tries from left to right *)
           [ ("---", "&mdash;")
           , ("--", "&ndash;")
           , ("...", "&hellip;")
@@ -53,7 +67,10 @@ fun emit_inline elt =
                                      "\" />");
 
 (*
-(syntax_highlight : 'a -> string) (block : 'a Block)
+emit_block : ('a -> string) -> 'a Block -> string
+
+...where (syntax_highlight : 'a -> string) is the first
+argument.
 
 Note that `<pre>` should NOT have a newline separating it from
 the code.
@@ -63,9 +80,18 @@ the usual entities (#"<", #">", #"&", #"\"", etc.).
 *)
 fun emit_block syntax_highlight block =
     case block of
-        Par elts => ("\n<p>\n" ^
-                     (concat (map emit_inline elts)) ^
-                     "\n</p>\n")
+        Par elts =>
+        (case elts of
+             (* Hack for div blocks *)
+             [(Text e)] => if String.isPrefix "<div" e orelse
+                              String.isPrefix "</div>" e
+                           then e
+                           else ("\n<p>\n" ^
+                                 e ^
+                                 "\n</p>\n")
+           | _ =>  ("\n<p>\n" ^
+                    (concat (map emit_inline elts)) ^
+                    "\n</p>\n"))
       | Pre (code,NONE) => ("\n<pre>"^
                             (syntax_highlight code) ^
                             "</pre>\n")
