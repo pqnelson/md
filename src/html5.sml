@@ -6,19 +6,30 @@ val escape_html =
                    | #">" => "&gt;"
                    | #"\"" => "&quot;"
                    | #"'" => "&apos;"
+                   | #"$" =>  "&dollar;"
                    | c => String.str c);
 
+(* pprint : string -> string
 
-fun replace_em_dash s =
-    string_replace_all "---" s "&mdash;";
+Takes a text string which will appear in part of a non-code
+environment, and replace certain patterns with their intended
+HTML entity (like "---" with an em-dash).
 
-fun replace_en_dash s =
-    string_replace_all "--" s "&ndash;";
+This is idempotent.
+ *)
+fun pprint s =
+    foldl (fn ((raw,replace),acc) =>
+              string_replace_all raw acc replace)
+          s
+          [ ("---", "&mdash;")
+          , ("--", "&ndash;")
+          , ("...", "&hellip;")
+          ];
 
 structure Html5 : EMITTER = struct
 fun emit_inline elt =
     case elt of
-        Text x => replace_en_dash (replace_em_dash x)
+        Text x => pprint x
       | Emph x => ("<i>" ^
                    (concat (map emit_inline x)) ^
                    "</i>")
