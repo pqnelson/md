@@ -8,6 +8,8 @@ The goal is to use this as part of a larger tool for literate
 programming where we are developing a _tower_ of metalanguages for doing
 mathematics. 
 
+I need to consider [bootstrappable best practices](https://bootstrappable.org/best-practices.html)
+
 # License
 
 This is all written using the MIT License.
