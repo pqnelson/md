@@ -302,6 +302,22 @@ fun recur_on_dir css_files out_path src_dirname =
         contents
   end;
 
+(* format_dir : string -> string
+
+Formats directory names so it trims any trailing slashes ---
+this is necessary for getting the directory name.
+
+It only causes problems with the `--r` recursive option.
+*)
+fun format_dir name =
+  let
+      val tmp = OS.Path.toUnixPath name
+      val len = String.size tmp
+  in
+      if String.isSuffix "/" tmp
+      then OS.Path.fromUnixPath(String.substring(tmp,0,len-1))
+      else name
+  end;
 (*
 run : string list -> unit
 
@@ -321,8 +337,9 @@ fun run args =
      then ()
      else app (fn srcdir =>
                   let
+                    val subdir = OS.Path.file (format_dir srcdir);
                     val outdir = mkdir_in (OS.FileSys.fullPath out)
-                                          (OS.Path.file srcdir);
+                                          subdir;
                   in
                     recur_on_dir css_files outdir srcdir
                   end)
