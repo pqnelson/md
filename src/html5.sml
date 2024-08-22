@@ -152,15 +152,24 @@ val generic_header = concat
   , "\n"
   ];
 
+fun add_title metadata header =
+    case (List.filter (fn (x,y) => "title" = x) metadata) of
+        [] => header
+      | (_,title)::_ => "<title>"^(title)^"</title>\n"^header;
+
 fun html5 (s : string) (header : string) (footer : string) =
-    generic_header ^
-    header ^
-    "\n</head>\n<body>\n" ^
-    "<main>\n" ^
-    (Html5.emit escape_html (Md.parse s)) ^
-    "\n" ^
-    footer ^
-    "</main>\n" ^
-    "\n</body>\n" ^
-    "</html>\n";
+    let
+      val (metadata, body) = Md.parse s;
+    in
+      generic_header ^
+      (add_title metadata header) ^
+      "\n</head>\n<body>\n" ^
+      "<main>\n" ^
+      (Html5.emit escape_html body) ^
+      "\n" ^
+      footer ^
+      "</main>\n" ^
+      "\n</body>\n" ^
+      "</html>\n"
+    end;
         

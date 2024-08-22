@@ -6,7 +6,7 @@
       character is also a `$`, then find the next occurrence of `$$` and
       advance the parser after it (which would then make it bold,
       italicized, or whatever).
-- [ ] If `$`, `\(`, `\)`, `\[`, `\]`, etc., occur within a code or `pre`
+- [X] If `$`, `\(`, `\)`, `\[`, `\]`, etc., occur within a code or `pre`
       block, then we should escape it --- change `$` to `&dollar;`,
       change `\(` to `&bsol;&lpar;`,
       `\)` to `&bsol;&rpar;`,
@@ -16,7 +16,7 @@
       - KaTeX [autorender](https://katex.org/docs/autorender)
 
 # Titles
-- [ ] Support "metadata" like Jekyll, Hakyl, etc.? This would be
+- [X] Support "metadata" like Jekyll, Hakyl, etc.? This would be
       indicated by starting with a line `---` followed by YAML-like data,
       terminated by a standalone line whose contents is only `---`
       

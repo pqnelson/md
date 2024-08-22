@@ -1,15 +1,3 @@
-fun html5 (s : string) (header : string) (footer : string) =
-    generic_header ^
-    header ^
-    "\n</head>\n<body>\n" ^
-    "<main>\n" ^
-    (Html5.emit id (Md.parse s)) ^
-    "\n" ^
-    footer ^
-    "</main>\n" ^
-    "\n</body>\n" ^
-    "</html>\n";
-
 fun html5_test name 
                (expected_lines : string list)
                (actual_lines : string list) =

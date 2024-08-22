@@ -5,7 +5,7 @@ fun assert_ast_eq (expected : string Block list)
                   (lines : string list) =
     (fn () =>
         let
-          val actual = Md.parse (String.concatWith "\n" lines);
+          val (_, actual) = Md.parse (String.concatWith "\n" lines);
           val msg = "## EXPECTED: [" ^
                     (String.concatWith
                          ", "

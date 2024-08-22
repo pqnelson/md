@@ -497,12 +497,50 @@ and parse_block lines =
     parse_iter [] lines
   end;
 
-(* parse : string -> string Block list *)
+(* end of metadata : string -> int *)
+fun end_of_metadata (s : string) =
+    string_indexof_from "\n---" s 4;
+
+(* starts_metadata : string -> bool *)
+fun starts_metadata (s : string) =
+    String.isPrefix "---\n" s;
+
+(* extract_metadata : string -> ((string, string) list)*string *)
+fun extract_metadata (s : string) =
+    if not (starts_metadata s)
+    then ([], s)
+    else (case end_of_metadata s of
+              NONE => ([], s)
+            | (SOME idx) =>
+    let
+      val header = String.substring(s,4,idx-3);
+      val lines = (String.tokens (fn c => #"\n" = c) header);
+      (* Each line looks like "key: value" *)
+      fun extract line =
+          case str_indexof (fn c => #":" = c) line of
+              NONE => NONE
+            | (SOME idx) => SOME (string_trim
+                                      (String.substring(line,0,idx)),
+                                  string_trim
+                                      (String.extract(line,idx+1,NONE)));
+      val meta = foldr (fn (line,acc) =>
+                           (case extract line of
+                                SOME c => c::acc
+                              | _ => acc))
+                       []
+                       lines;
+      val body = String.extract(s, idx, NONE);
+    in
+      (meta, body)
+    end);
+
+(* parse : string -> ((string * string) list) * (string Block list) *)
 fun parse (s : string) =
   let
-    val lines =  (String.fields (fn c => #"\n" = c) s)
+    val (metadata,body) = extract_metadata s;
+    val lines =  (String.fields (fn c => #"\n" = c) body);
   in
-    parse_block lines
+    (metadata, parse_block lines)
   end;
 
 end;
