@@ -548,7 +548,7 @@ fun extract_metadata (s : string) =
                               | _ => acc))
                        []
                        lines;
-      val body = String.extract(s, idx, NONE);
+      val body = String.extract(s, idx+4, NONE);
     in
       (meta, body)
     end);
