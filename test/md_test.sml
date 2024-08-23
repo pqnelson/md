@@ -107,34 +107,62 @@ val pre_test2 =
               "```"];
 
 (* Github does this, as of 19 August 2024 *)
-val inline_test1 =
-    ast_test "inline_test1"
+val mixed_inline_test1 =
+    ast_test "mixed_inline_test1"
              [Par [Text "xxx ",
                    Bold [Text "yyy _zzz aaa"],
                    Text " bbb_ ccc"]]
              ["xxx **yyy _zzz aaa** bbb_ ccc"];
 
 (* Github does this, as of 19 August 2024 *)
-val inline_test2 =
+val mixed_inline_test2 =
     ast_test "inline_test2"
              [Par [Text "xxx ",
                    Emph [Text "yyy **zzz aaa"],
                    Text " bbb** ccc"]]
              ["xxx _yyy **zzz aaa_ bbb** ccc"]
 
-val inline_test3 =
-    ast_test "inline_test3"
+val inline_code_test1 =
+    ast_test "inline_code_test1"
              [Par [Text "xxx ",
                    Code "yyy",
                    Text " zzz"]]
              ["xxx `yyy` zzz"];
 
-val inline_test4 =
-    ast_test "inline_test4"
+val inline_code_test2 =
+    ast_test "inline_test2"
              [Par [Text "xxx ",
                    Code "yyy` zzz",
                    Text " www"]]
              ["xxx ``yyy` zzz`` www"];
+
+val inline_code_test3 =
+    ast_test "inline_test3"
+             [Par [Text "XXX ",
+                   Code "YYY``` ZZZ",
+                   Text " WWW"]]
+             ["XXX ``YYY``` ZZZ`` WWW"];
+
+val inline_code_test4 =
+    ast_test "inline_test4"
+             [Par [Text "If I want to include 'named code chunks' as WEB,\nCWEB, and NOWEB all support --- with ",
+                   Code "<<code chunk name>>=",
+                   Text " as the first\nline following the ",
+                   Code "```language",
+                   Text " declaration --- then I need to make\nsure I replace all instances of ",
+                   Code "<<code chunk name>>",
+                   Text " with its contents\nwhen ",
+                   Code "tangle",
+                   Text " is invoked, and have ",
+                   Code "weave",
+                   Text " link back to the code block\ndefining this code chunk."
+             ]]
+             ["If I want to include 'named code chunks' as WEB,"
+, "CWEB, and NOWEB all support --- with `<<code chunk name>>=` as the first"
+, "line following the `` ```language `` declaration --- then I need to make"
+, "sure I replace all instances of `<<code chunk name>>` with its contents"
+, "when `tangle` is invoked, and have `weave` link back to the code block"
+, "defining this code chunk."];
 
 val url_test1 =
     ast_test "url_test1"
@@ -160,10 +188,12 @@ val img_test1 =
              ["xxx ![The Mona Lisa](https://en.wikipedia.org/wiki/Mona_Lisa#/media/File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg) yyy"];
 
 register_suite "md_test/inline/" [
-  inline_test1
-, inline_test2
-, inline_test3
-, inline_test4
+  mixed_inline_test1
+, mixed_inline_test2
+, inline_code_test1
+, inline_code_test2
+, inline_code_test3
+, inline_code_test4
 , url_test1
 , anchor_test1
 , img_test1

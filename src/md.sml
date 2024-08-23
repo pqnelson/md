@@ -128,16 +128,35 @@ fun inline_code s len start =
           val token = implode(List.tabulate (i, fn _ => #"`"));
           val token_len = String.size token;
           val post_token_lexeme = (String.extract(lexeme, i, NONE));
-        in (case string_indexof token post_token_lexeme of
-                SOME j =>
-                let
-                  val rest = String.extract(post_token_lexeme,j+i,NONE);
-                in
-                  Right (prefix,
-                         Code (String.substring(post_token_lexeme,0,j)),
-                         rest)
-                end
-              | NONE => Left i)
+          (* post_token_lexeme looks like "foo ... bar` rest"
+           or "foo ... bar `` rest". *)
+          val post_token_len = String.size(post_token_lexeme);
+          fun is_ending_delim idx =
+              (idx = 0 orelse
+               #"`" <> String.sub(post_token_lexeme, idx - 1)) andalso
+              (post_token_len = (idx + token_len) orelse
+               (#"`" <> String.sub(post_token_lexeme,
+                                   idx + token_len)));
+          fun try_find_end idx =
+              if idx >= String.size(post_token_lexeme)
+              then Left i
+              else (case string_indexof_from token post_token_lexeme idx of
+                        SOME j =>
+                        if is_ending_delim j
+                        then
+                          (let
+                            val rest = String.extract(post_token_lexeme,
+                                                      j+token_len,
+                                                      NONE);
+                          in
+                            Right (prefix,
+                                   Code (string_trim(String.substring(post_token_lexeme,0,j))),
+                                   rest)
+                          end)
+                        else try_find_end (idx + 1)
+                      | NONE => Left i) (* try_find_end (idx + 1)) *)
+        in
+          try_find_end 0
         end
     end;
 
