@@ -41,6 +41,38 @@ val string_indexof_from_test1 =
                assert_eq (expected, actual, msg)
              end);
 
+val string_indexof_test1 =
+    test "string_indexof_test1"
+         (fn () =>
+             let
+               val s = "YYY``` ZZZ`` WWW)";
+               val actual = string_indexof ")" s;
+               val expected = SOME 16;
+               val msg = "## EXPECTED "^
+                         (serialize_opt_i expected)^
+                         "\n## ACTUAL "^
+                         (serialize_opt_i actual)^"\n";
+             in
+               assert_eq (expected, actual, msg)
+             end);
+
+val string_indexof_test2 =
+    test "str_indexof_test2"
+         (fn () =>
+             let
+               val s = "- foo";
+               val i = (case str_indexof (fn c => #" " = c) s of
+                            SOME j => j
+                          | NONE => ~1);
+             in
+               assert_eq((SOME 1),
+                         (str_indexof (fn c => #" " = c) s),
+                         concat(["Index of ' ' in \"- foo\" ",
+                                 "expected to be 1 ",
+                                 "actual: ",
+                                 Int.toString(i)]))
+             end);
+
 register_suite "utils_test/" [
   mk_string_trim_test "string_trim_test1" "foo" "  foo"
 , mk_string_trim_test "string_trim_test2" "bar and eggs" "bar and eggs   "
@@ -56,4 +88,6 @@ register_suite "utils_test/" [
 , mk_string_to_upper_test "string_to_upper_test3" "FOO BAR" "FoO bAr"
 , mk_string_to_upper_test "string_to_upper_test4" "FOO BAR33" "FoO bAr33"
 , string_indexof_from_test1
+, string_indexof_test1
+, string_indexof_test2
 ];

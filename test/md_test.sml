@@ -199,28 +199,25 @@ register_suite "md_test/inline/" [
 , img_test1
 ];
 
-register_suite "md_utils_test/" [
-  (test "str_indexof_test1"
-        (fn () =>
-            let
-              val s = "- foo";
-              val i = (case str_indexof (fn c => #" " = c) s of
-                           SOME j => j
-                         | NONE => ~1);
-            in
-              assert_eq((SOME 1),
-                        (str_indexof (fn c => #" " = c) s),
-                        concat(["Index of ' ' in \"- foo\" ",
-                                "expected to be 1 ",
-                                "actual: ",
-                                Int.toString(i)]))
-            end))
-];
+
+val link_test1 =
+    ast_test "link_test1"
+             [Par [Link {link_desc=[Text "Isabelle"]
+                                ,link_url="https://isabelle.in.tum.de/library/Doc/Implementation/ML.html"}]]
+             ["[Isabelle](https://isabelle.in.tum.de/library/Doc/Implementation/ML.html)"];
+
+val link_test2 =
+    ast_test "link_test2"
+             [UList [[Par [Link {link_desc=[Text "Isabelle"]
+                                ,link_url="https://isabelle.in.tum.de/library/Doc/Implementation/ML.html"}]]]]
+             ["- [Isabelle](https://isabelle.in.tum.de/library/Doc/Implementation/ML.html)"];
 
 register_suite "md_test/" [
   header_test1
 , header_test2
 , header_test3
+, link_test1
+, link_test2
 , bq_test1
 , bq_test2
 , bq_test3

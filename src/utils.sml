@@ -62,7 +62,7 @@ string, if any exists.
 *)
 local
   fun matches_at sub s len pos =
-      ((String.size(sub)) + pos < len) andalso
+      ((String.size(sub)) + pos <= len) andalso
       (EQUAL =
        Substring.compare(Substring.extract(sub, 0, NONE),
                          Substring.substring(s, pos, String.size(sub))));
