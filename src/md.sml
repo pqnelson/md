@@ -265,7 +265,7 @@ and link s len pos = (case carve_link s len pos of
                       (scan rest (String.size rest) 0))
 and scan s len pos =
   if pos >= len
-  then [Text s]
+  then (if 0 = len then [] else [Text s])
   else (case String.sub(s, pos) of
             #"*" =>
                 if (pos + 1) < len andalso
