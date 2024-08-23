@@ -46,6 +46,13 @@ fun str_indexof (pred : char -> bool) (s : string) =
         NONE => NONE
       | SOME (i,c) => SOME i);
 
+fun str_indexof_from (pred : char -> bool) (s : string) start =
+    if (start >= String.size s)
+    then NONE
+    else if pred (String.sub(s, start))
+    then SOME start
+    else str_indexof_from pred s (start + 1);
+
 (*
 string_indexof_from : string -> string -> int -> int option
 
@@ -54,25 +61,27 @@ Returns the index of the first character in the string after
 string, if any exists.
 *)
 local
+  fun matches_at sub s len pos =
+      ((String.size(sub)) + pos < len) andalso
+      (EQUAL =
+       Substring.compare(Substring.extract(sub, 0, NONE),
+                         Substring.substring(s, pos, String.size(sub))));
   fun string_indexof_iter (sub : string) (s : string) len (pos : int) =
-    if "" = s orelse pos >= len
+    if pos >= len
     then NONE
-    else if (String.isPrefix sub s) orelse ("" = sub)
-    then SOME pos
-    else (case str_indexof (fn c => String.sub(sub,0) = c) s of
-              SOME i' =>
-              let
-                val i = Int.max(i', 1)
-              in
-                string_indexof_iter sub
-                                    (String.extract(s, i, NONE))
-                                    len
-                                    (pos + i)
-              end
-            | NONE => NONE);
+    else (case str_indexof_from (fn c => String.sub(sub,0) = c) s pos of
+            SOME i =>
+            if matches_at sub s len i
+            then SOME i
+            else string_indexof_iter sub s len (i + 1)
+           | NONE => NONE);
 in
 fun string_indexof_from sub s start =
-    string_indexof_iter sub s (String.size s) start
+    if "" = s orelse start >= String.size s
+    then NONE
+    else if Substring.isPrefix sub (Substring.extract(s,start,NONE))
+    then SOME start
+    else string_indexof_iter sub s (String.size s) start
 end;
 
 (*
