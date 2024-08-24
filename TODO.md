@@ -1,3 +1,18 @@
+- [ ] Need to make sure that TeX literals do not accidentally capture
+      the end of a bold italic text. Although I cannot imagine anyone
+      writing `**` in TeX, that is not the same as it being
+      impossible.
+      
+      It is far more likely that someone would write something like
+      `Einstein did not prove $E=mc^{2}$ but _instead proved $E^{2}c^{2}=\eta^{\mu\nu}p_{\mu}p_{\nu}$ which is far more useful!_`
+      I guess this should be rendered as:
+      `Einstein did not prove $E=mc^{2}$ but <em>instead proved $E^{2}c^{2}=\eta^{\mu\nu}p_{\mu}p_{\nu}$ which is far more useful!</em>`
+      or something similar.
+- [X] Need to trim `*` suffix on programming language names when
+      transforming code fenced blocks --- these are supposed to be
+      "example usages" (or more precisely, a "do not include this"
+      signifier to the Markdown engine).
+
 # Titles
 - [X] Support "metadata" like Jekyll, Hakyl, etc.? This would be
       indicated by starting with a line `---` followed by YAML-like data,

@@ -394,12 +394,25 @@ fun header (lines : string list) =
      rest)
   end;
 
+fun pre_meta (line::_) =
+  let
+    fun trim_ast lang = if String.isSuffix "*" lang
+                        then String.extract(lang,0, SOME((size lang)-1))
+                        else lang;
+    (* line always looks like "```...\n" *)
+    val raw = String.extract(line, 3, NONE);
+  in
+    if blank_line raw
+    then NONE
+    else (case str_indexof Char.isSpace raw of
+              NONE => SOME(trim_ast raw)
+            | SOME i => SOME(trim_ast (String.substring(raw,0,i))))
+  end
+  | pre_meta _ = NONE; 
+
 fun pre (lines : string list) =
   let
-    val meta_raw = String.extract(hd lines, 3, NONE);
-    val meta = if blank_line meta_raw
-               then NONE
-               else SOME meta_raw
+    val meta = pre_meta lines;
     fun ends_pre l = String.isPrefix "```" l;
     val (body,rest) = (case list_indexof ends_pre (tl lines) of
                            NONE => (lines, [])
