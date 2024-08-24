@@ -221,6 +221,53 @@ fun anchor s pos len =
                           String.extract(rest_s,i+1,NONE))
     end;
 
+(* skip_tex : string -> int -> int
+
+Returns the next position, skipping over any TeX code
+delimited by '$...$', '$$...$$', '\(...\)', '\[...\]',
+'\begin{equation}...\end{equation}', or
+'\begin{align}...\end{align}'.
+
+If no such delimiter is found in the next character, then it
+should simply increment the position parameter.
+*)
+fun skip_tex s len pos =
+    if #"$" = String.sub(s,pos)
+    then (if len > pos + 1 andalso
+             #"$" = String.sub(s,pos+1)
+          then (case string_indexof_from "$$" s (pos + 2) of
+                    NONE => pos + 2
+                  | SOME i => i + 2)
+          else (case string_indexof_from "$" s (pos + 1) of
+                    NONE => pos + 1
+                  | SOME i => i + 1))
+    else if len > pos + 1 andalso
+            #"\\" = String.sub(s,pos)
+    then (if #"(" = String.sub(s,pos+1)
+          then (case string_indexof_from "\\)" s (pos + 1) of
+                    NONE => pos + 1
+                  | SOME i => i + 2)
+          else if #"[" = String.sub(s,pos+1)
+          then (case string_indexof_from "\\]" s (pos + 1) of
+                    NONE => pos + 1
+                  | SOME i => i + 2)
+          else if len > size("begin{equation}") andalso
+                  EQUAL = String.compare(
+                    String.substring(s, pos+1, size("begin{equation}")),
+                    "begin{equation}")
+          then (case string_indexof_from "\\end{equation}" s (pos + 1) of
+                    NONE => pos + 1
+                  | SOME i => i + size("\\end{equation}"))
+          else if len > size("begin{align}") andalso
+                  EQUAL = String.compare(
+                    String.substring(s, pos+1, size("begin{align}")),
+                    "begin{align}")
+          then (case string_indexof_from "\\end{align}" s (pos + 1) of
+                    NONE => pos + 1
+                  | SOME i => i + size("\\end{align}"))
+          else pos + 1)
+    else pos + 1;
+
 (*
 This will take "foo **bar** rest" and produce (Bold [Text "bar"], " rest")
 We need to handle the "foo " being saved in a Text
@@ -315,7 +362,7 @@ and scan s len pos =
                          txt ::
                          img ::
                          (scan rest (String.size rest) 0))
-          | _ => scan s len (pos + 1) 
+          | _ => scan s len (skip_tex s len pos)
        );
 
 fun parse_inline s = scan s (String.size s) 0;

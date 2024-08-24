@@ -54,9 +54,9 @@ Parses the `input_name` as Markdown, then generates HTML5 with
 the appropriate header modified by the `css_links`, and sticks
 the resulting HTML5 text in `output_name`.
 *)
-fun generate_html input_name output_name css_links =
+fun generate_html input_name output_name hdr_changes  =
   let
-    val s = html5 (read_file input_name) css_links "";
+    val s = html5 (read_file input_name) hdr_changes "";
   in
     print ("Writing "^output_name^"\n");
     write_to_file output_name s
@@ -207,11 +207,14 @@ fun output_opt (opts : string list) =
     | (out, rest) => (out, rest);
 
 fun usage () =
- (print("\nmd --- converts a markdown file to HTML5\n\n");
+ (print("md --- converts a markdown file to HTML5\n\n");
   print("Optional arguments:\n\n");
   print("--css <dir>, --css=<dir> will include all the CSS files\n");
   print("    found in the directory. Accepts comma-separated\n");
   print("    values (with NO SPACES), or multiple appearances.\n");
+  print("\n");
+  print("--katex will include KaTeX javascript, css in the header\n");
+  print("    inline delimited by '$...$' and '\\(...\\)' both.\n");
   print("\n");
   print("--output <path>, --output=<path> will produce the HTML\n");
   print("    file(s) in the path\n");
@@ -239,14 +242,14 @@ Given a list of CSS files, an output directory, and a markdown
 file, generate the HTML5 in the specified output directory with
 links to all the given CSS files.
 *)
-fun generate_one css_files output_dir md_file =
+fun generate_one css_files hdr_changes output_dir md_file =
     let
       val output_name = (output_file md_file output_dir);
       val css_files_elt = (include_css_files css_files output_name);
     in
       generate_html md_file
                     output_name
-                    css_files_elt
+                    (css_files_elt ^"\n" ^ hdr_changes)
     end;
 
 (* Given a directory's absolute path `dir`,
@@ -279,7 +282,7 @@ The `out_path` and `src_dirname` may be relative or absolute
 paths, we end up determining their absolute paths as the first
 step and work with those anyways.
 *)
-fun recur_on_dir css_files out_path src_dirname =
+fun recur_on_dir css_files hdr_changes out_path src_dirname =
   let
     val outdir = OS.FileSys.fullPath out_path;
     val abs_src = OS.FileSys.fullPath src_dirname;
@@ -293,10 +296,11 @@ fun recur_on_dir css_files out_path src_dirname =
           in
             if OS.FileSys.isDir file
             then recur_on_dir css_files
+                              hdr_changes
                               (mkdir_in outdir child)
                               file
             else if is_md file
-            then generate_one css_files outdir file
+            then generate_one css_files hdr_changes outdir file
             else ()
           end)
         contents
@@ -318,6 +322,48 @@ fun format_dir name =
       then OS.Path.fromUnixPath(String.substring(tmp,0,len-1))
       else name
   end;
+
+val KaTeX_header =
+concat[
+  "<link rel=\"stylesheet\" ",
+  "href=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css\""
+," integrity=\"sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx/"
+,"/Rlm+ZU03BU6SQNC66uf4l5+\" crossorigin=\"anonymous\">\n"
+,"\n"
+,"<!-- The loading of KaTeX is deferred to speed up page "
+,"rendering -->\n"
+,"<script defer src=\"https://cdn.jsdelivr.net/npm/"
+,"katex@0.16.11/dist/katex.min.js\" "
+,"integrity=\"sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg\""
+," crossorigin=\"anonymous\"></script>\n"
+,"\n"
+,"<!-- To automatically render math in text elements, include "
+,"the auto-render extension: -->"
+,"<script defer src=\"https://cdn.jsdelivr.net/npm/"
+,"katex@0.16.11/dist/contrib/auto-render.min.js\" "
+,"integrity=\"sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk\" crossorigin=\"anonymous\"\n"
+,"onload=\"renderMathInElement(document.body);\"></script>\n"
+,"<script>\n"
+,"    // https://github.com/KaTeX/KaTeX/blob/main/docs/autorender.md\n"
+,"    document.addEventListener(\"DOMContentLoaded\", function() {\n"
+,"        renderMathInElement(document.body, {\n"
+,"            // customised options\n"
+,"            // auto-render specific keys, e.g.:\n"
+,"                delimiters: [\n"
+,"                {left: '$$', right: '$$', display: true},\n"
+,"                {left: '$', right: '$', display: false},\n"
+,"                {left: '\\\\(', right: '\\\\)', display: false},\n"
+,"                {left: '\\\\[', right: '\\\\]', display: true},\n"
+,"                {left: \"\\begin{equation}\", right: \"\\end{equation}\", display: true},\n"
+,"                {left: \"\\begin{align}\", right: \"\\end{align}\", display: true},\n"
+,"            ],\n"
+,"            // rendering keys, e.g.:\n"
+,"            throwOnError : false\n"
+,"        });\n"
+,"    });\n"
+," </script>\n"
+];
+
 (*
 run : string list -> unit
 
@@ -326,7 +372,10 @@ HTML5 output.
 *)
 fun run args =
   let
-    val (css,r1) = css_dirs_options args;
+    val (kt,r0) = List.partition (fn s => "--katex" = s) args;
+    val katex_hdr = if null kt then ""
+                    else KaTeX_header;
+    val (css,r1) = css_dirs_options r0;
     val css_files = List.concat (map get_css_files css);
     val (out,r2) = case output_opt r1 of
                        ([name],r2) => (name,r2)
@@ -341,12 +390,12 @@ fun run args =
                     val outdir = mkdir_in (OS.FileSys.fullPath out)
                                           subdir;
                   in
-                    recur_on_dir css_files outdir srcdir
+                    recur_on_dir css_files katex_hdr outdir srcdir
                   end)
               recursive);
     (if null rest
      then ()
-     else app (generate_one css_files out) rest)
+     else app (generate_one css_files katex_hdr out) rest)
   end;
 
 fun main () =

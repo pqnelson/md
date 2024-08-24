@@ -12,7 +12,7 @@
       `\)` to `&bsol;&rpar;`,
       `\[` to `&bsol;&lbrack;`, `\]` to `&bsol;&rbrack;`,
       etc.
-- [ ] Research katex versus mathjax.
+- [X] Support KaTeX
       - KaTeX [autorender](https://katex.org/docs/autorender)
 
 # Titles
