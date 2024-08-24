@@ -323,6 +323,9 @@ fun format_dir name =
       else name
   end;
 
+(*
+Modified from https://github.com/KaTeX/KaTeX/blob/main/contrib/auto-render/index.html
+*)
 val KaTeX_header =
 concat[
   "<link rel=\"stylesheet\" ",
@@ -338,7 +341,7 @@ concat[
 ," crossorigin=\"anonymous\"></script>\n"
 ,"\n"
 ,"<!-- To automatically render math in text elements, include "
-,"the auto-render extension: -->"
+,"the auto-render extension: -->\n"
 ,"<script defer src=\"https://cdn.jsdelivr.net/npm/"
 ,"katex@0.16.11/dist/contrib/auto-render.min.js\" "
 ,"integrity=\"sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk\" crossorigin=\"anonymous\"\n"
