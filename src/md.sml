@@ -253,18 +253,18 @@ fun skip_tex s len pos =
                   | SOME i => i + 2)
           else if len > size("begin{equation}") andalso
                   EQUAL = String.compare(
-                    String.substring(s, pos+1, size("begin{equation}")),
+                    String.substring(s, pos+1, 15),
                     "begin{equation}")
           then (case string_indexof_from "\\end{equation}" s (pos + 1) of
                     NONE => pos + 1
-                  | SOME i => i + size("\\end{equation}"))
+                  | SOME i => i + 14) (* i + size "\\end{equation}" *)
           else if len > size("begin{align}") andalso
                   EQUAL = String.compare(
-                    String.substring(s, pos+1, size("begin{align}")),
+                    String.substring(s, pos+1, 12),
                     "begin{align}")
           then (case string_indexof_from "\\end{align}" s (pos + 1) of
                     NONE => pos + 1
-                  | SOME i => i + size("\\end{align}"))
+                  | SOME i => i + 11) (* i + size("\\end{align}") *)
           else pos + 1)
     else pos + 1;
 

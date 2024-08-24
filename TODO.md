@@ -1,20 +1,3 @@
-# LaTeX support
-- [ ] Need to skip `$...$`, `$$...$$`, `\(...\)`, `\[...\]` from being
-      parsed in Markdown as anything other than plain text.
-      
-      One first stab might be: if we encounter a `$`, check if the next
-      character is also a `$`, then find the next occurrence of `$$` and
-      advance the parser after it (which would then make it bold,
-      italicized, or whatever).
-- [X] If `$`, `\(`, `\)`, `\[`, `\]`, etc., occur within a code or `pre`
-      block, then we should escape it --- change `$` to `&dollar;`,
-      change `\(` to `&bsol;&lpar;`,
-      `\)` to `&bsol;&rpar;`,
-      `\[` to `&bsol;&lbrack;`, `\]` to `&bsol;&rbrack;`,
-      etc.
-- [X] Support KaTeX
-      - KaTeX [autorender](https://katex.org/docs/autorender)
-
 # Titles
 - [X] Support "metadata" like Jekyll, Hakyl, etc.? This would be
       indicated by starting with a line `---` followed by YAML-like data,
