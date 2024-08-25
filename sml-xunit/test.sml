@@ -28,10 +28,10 @@ structure Test : TEST = struct
     let
       val start = Time.now();
     in
-      assertion();
-      ResultCase(name,
-                 (Time.-)(Time.now(), start),
-                 Success)
+      (assertion();
+       ResultCase(name,
+                  (Time.-)(Time.now(), start),
+                  Success))
       handle Assert.Failure msg => ResultCase (name,
                                                (Time.-)(Time.now(), start),
                                                Failure msg)
