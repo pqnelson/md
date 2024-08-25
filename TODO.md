@@ -1,4 +1,4 @@
-- [ ] Need to make sure that TeX literals do not accidentally capture
+- [X] Need to make sure that TeX literals do not accidentally capture
       the end of a bold italic text. Although I cannot imagine anyone
       writing `**` in TeX, that is not the same as it being
       impossible.

@@ -268,6 +268,39 @@ fun skip_tex s len pos =
           else pos + 1)
     else pos + 1;
 
+(* interrupted_TeX_index : string -> int -> int -> int -> int option
+
+If there is a TeX delimiter between `start` and `stop`, and if
+it is incomplete (i.e., interrupted by `stop`), then return
+`SOME idx` for the position of the TeX delimiter.
+
+Otherwise, return NONE.
+ *)
+fun interrupted_TeX_index s len start stop : int option =
+  foldl (fn (pred, NONE) =>
+          (case CharVector.findi pred s of
+               NONE => NONE
+             | SOME(i,_) => if i < stop
+                            then (SOME i)
+                            else NONE)
+        | (_,y) => y)
+        NONE
+        [(fn (i,c) =>
+             i > start andalso
+             #"$" = c andalso
+             #"\\" <> String.sub(s, i - 1))
+        ,(fn (i,c) =>
+             #"\\" = c andalso
+             start < i andalso i < stop - 1 andalso
+             (#"(" = String.sub(s, i + 1) orelse
+              #"[" = String.sub(s, i + 1) orelse
+              let
+                val ss = Substring.extract(s, i+1, NONE)
+              in
+                Substring.isPrefix "begin{equation}" ss orelse
+                Substring.isPrefix "begin{align}" ss
+              end))];
+
 (*
 This will take "foo **bar** rest" and produce (Bold [Text "bar"], " rest")
 We need to handle the "foo " being saved in a Text
@@ -275,26 +308,40 @@ We need to handle the "foo " being saved in a Text
 fun try_delim s len pos delim delim_len constructor =
   let
     val rest_s = String.extract(s, pos + delim_len, NONE);
+    fun skip_to i =
+      let
+        val lexeme =
+          String.substring(rest_s,
+                           0,
+                           i);
+        val lexeme_len = String.size(lexeme);
+        val prefix = if 0 = pos
+                     then NONE
+                     else SOME(String.substring(s, 0, pos));
+      in
+        SOME (prefix,
+              constructor (scan lexeme lexeme_len 0),
+              String.extract(rest_s,
+                             i + delim_len,
+                             NONE))
+      end;
   in
     (case string_indexof delim rest_s of
-       SOME i => (let
-                   val lexeme =
-                       String.substring(rest_s,
-                                        0,
-                                        i);
-                   val lexeme_len = String.size(lexeme);
-                   val prefix = if 0 = pos
-                                then NONE
-                                else SOME(String.substring(s, 0, pos));
-                 in
-                   SOME (prefix,
-                         constructor (scan lexeme lexeme_len 0),
-                         String.extract(rest_s,
-                                        i + delim_len,
-                                        NONE))
-                 end)
-      | NONE => NONE)
-  end
+         SOME i => (case interrupted_TeX_index rest_s (len - i) 0 i of
+                        SOME j =>
+                        (let
+                          val k = skip_tex rest_s (len - i) (i + j)
+                        in
+                          if k = j + 1 then skip_to i
+                          else (case string_indexof_from delim rest_s k of
+                                    SOME ell => skip_to ell
+                                  | NONE => (* false positive?! *) 
+                                    NONE
+                               )
+                        end)
+                      | NONE => skip_to i) 
+       | NONE => NONE)
+     end
 and link s len pos = (case carve_link s len pos of
                        NONE => scan s len (pos + 1)
                     | SOME (NONE, descr, url, rest) =>

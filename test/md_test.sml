@@ -201,6 +201,31 @@ val link_test2 =
                                 ,link_url="https://isabelle.in.tum.de/library/Doc/Implementation/ML.html"}]]]]
              ["- [Isabelle](https://isabelle.in.tum.de/library/Doc/Implementation/ML.html)"];
 
+val TeX_test1 =
+  ast_test "TeX_test1"
+           [Par [ Text "Einstein did not prove $E=mc^{2}$ but "
+                , Emph [Text "instead proved $E^{2}c^{2}=\\eta^{\\mu\\nu}p_{\\mu}p_{\\nu}$ which is far more useful!"]
+           ]]
+           ["Einstein did not prove $E=mc^{2}$ but _instead proved $E^{2}c^{2}=\\eta^{\\mu\\nu}p_{\\mu}p_{\\nu}$ which is far more useful!_"];
+
+val TeX_test2 =
+  ast_test "TeX_test2"
+           [Par [ Text "Einstein did not prove $E=mc^{2}$ but _instead proved $E^{2}c^{2}=\\eta^{\\mu\\nu}p_{\\mu}p_{\\nu}$ which is far more useful!"]]
+           ["Einstein did not prove $E=mc^{2}$ but _instead proved $E^{2}c^{2}=\\eta^{\\mu\\nu}p_{\\mu}p_{\\nu}$ which is far more useful!"];
+
+val TeX_test3 =
+  ast_test "TeX_test3"
+           [Par [ Text "I "
+                , Bold [Text "love"]
+                , Text " convolutions! So much so that I "
+                , Bold [Text "hacked TeX to write \\begin{equation}f**g=\\int(mess)dx\\end{equation} when encountering two asterisks!"]]]
+           [concat [
+               "I **love** convolutions! "
+             , "So much so that I **hacked TeX to write "
+             , "\\begin{equation}f**g=\\int(mess)dx\\end{equation}"
+             , " when encountering two asterisks!**"]];
+
+
 val suite = Test.register_suite "md_test/" [
     Test.suite "block/" [
       header_test1
@@ -273,7 +298,10 @@ val suite = Test.register_suite "md_test/" [
                     [Par [Text "This is the second item"]]]]
             ["11. This is an item",
              "2. This is the second item"])
-]
+, TeX_test1
+, TeX_test2
+, TeX_test3
+    ]
 , Test.suite "inline/" [
     mixed_inline_test1
   , mixed_inline_test2
