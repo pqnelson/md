@@ -1,6 +1,6 @@
-
+structure UtilsTest : SUITE = struct
 fun mk_string_fn_test f name expected raw =
-  test name
+  Test.new name
        (fn () =>
            let
              val actual = f raw;
@@ -9,7 +9,7 @@ fun mk_string_fn_test f name expected raw =
                         "'\n## ACTUAL: '"^
                         actual ^ "'");
            in
-           assert_eq(expected, actual, msg)
+           Assert.eq(expected, actual, msg)
            end);
 
 fun mk_string_trim_test name expected raw =
@@ -27,8 +27,8 @@ fun serialize_opt_i ((SOME s) : int option) = "SOME(\""^
   | serialize_opt_i NONE = "NONE";
 
 val string_indexof_from_test1 =
-    test "string_indexof_from_test1"
-         (fn () =>
+  Test.new "string_indexof_from_test1"
+           (fn () =>
              let
                val s = "YYY``` ZZZ`` WWW";
                val actual = string_indexof_from "``" s 6;
@@ -38,12 +38,12 @@ val string_indexof_from_test1 =
                          "\n## ACTUAL "^
                          (serialize_opt_i actual)^"\n";
              in
-               assert_eq (expected, actual, msg)
+               Assert.eq (expected, actual, msg)
              end);
 
 val string_indexof_test1 =
-    test "string_indexof_test1"
-         (fn () =>
+  Test.new "string_indexof_test1"
+           (fn () =>
              let
                val s = "YYY``` ZZZ`` WWW)";
                val actual = string_indexof ")" s;
@@ -53,11 +53,11 @@ val string_indexof_test1 =
                          "\n## ACTUAL "^
                          (serialize_opt_i actual)^"\n";
              in
-               assert_eq (expected, actual, msg)
+               Assert.eq (expected, actual, msg)
              end);
 
 val string_indexof_test2 =
-    test "str_indexof_test2"
+  Test.new "str_indexof_test2"
          (fn () =>
              let
                val s = "- foo";
@@ -65,7 +65,7 @@ val string_indexof_test2 =
                             SOME j => j
                           | NONE => ~1);
              in
-               assert_eq((SOME 1),
+               Assert.eq((SOME 1),
                          (str_indexof (fn c => #" " = c) s),
                          concat(["Index of ' ' in \"- foo\" ",
                                  "expected to be 1 ",
@@ -73,7 +73,7 @@ val string_indexof_test2 =
                                  Int.toString(i)]))
              end);
 
-register_suite "utils_test/" [
+val suite = Test.register_suite "utils_test/" [
   mk_string_trim_test "string_trim_test1" "foo" "  foo"
 , mk_string_trim_test "string_trim_test2" "bar and eggs" "bar and eggs   "
 , mk_string_trim_test "string_trim_test3" "spam eggs" "  spam eggs   "
@@ -91,3 +91,5 @@ register_suite "utils_test/" [
 , string_indexof_test1
 , string_indexof_test2
 ];
+
+end;

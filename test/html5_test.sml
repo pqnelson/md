@@ -1,7 +1,8 @@
+structure Html5Test : SUITE = struct
 fun html5_test name 
                (expected_lines : string list)
                (actual_lines : string list) =
-    test name
+  Test.new name
          (fn () =>
              let
                val expected = concat expected_lines;
@@ -11,7 +12,7 @@ fun html5_test name
                                   ""
                                   "";
              in
-               assert_eq (expected, actual,
+               Assert.eq (expected, actual,
                           ("## EXPECTED: \"" ^
                            expected ^
                            "\"\n" ^
@@ -66,10 +67,9 @@ html5_test "simple_html5_test2"
             " the case of openIn, the file name does not exist."
            ];
 
-
-
-
-register_suite "html5_test/" [
+val suite = Test.register_suite "html5_test/" [
   html5_test1
 , html5_test2
 ];
+
+end;

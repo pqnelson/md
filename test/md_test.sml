@@ -1,6 +1,8 @@
 fun serialize_block (block : string Block) =
     Block.serialize id block;
 
+structure MdTest : SUITE = struct
+
 fun assert_ast_eq (expected : string Block list)
                   (lines : string list) =
     (fn () =>
@@ -17,11 +19,11 @@ fun assert_ast_eq (expected : string Block list)
                          (map serialize_block actual)) ^
                     "]\n"
         in
-          assert msg (expected = actual)
+          Assert.!! msg (expected = actual)
         end);
 
 fun ast_test name expected actual =
-    test name (assert_ast_eq expected actual);
+    Test.new name (assert_ast_eq expected actual);
 
 val header_test1 =
     ast_test "header_test1"
@@ -187,19 +189,6 @@ val img_test1 =
                    Text " yyy"]]
              ["xxx ![The Mona Lisa](https://en.wikipedia.org/wiki/Mona_Lisa#/media/File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg) yyy"];
 
-register_suite "md_test/inline/" [
-  mixed_inline_test1
-, mixed_inline_test2
-, inline_code_test1
-, inline_code_test2
-, inline_code_test3
-, inline_code_test4
-, url_test1
-, anchor_test1
-, img_test1
-];
-
-
 val link_test1 =
     ast_test "link_test1"
              [Par [Link {link_desc=[Text "Isabelle"]
@@ -212,8 +201,9 @@ val link_test2 =
                                 ,link_url="https://isabelle.in.tum.de/library/Doc/Implementation/ML.html"}]]]]
              ["- [Isabelle](https://isabelle.in.tum.de/library/Doc/Implementation/ML.html)"];
 
-register_suite "md_test/" [
-  header_test1
+val suite = Test.register_suite "md_test/" [
+    Test.suite "block/" [
+      header_test1
 , header_test2
 , header_test3
 , link_test1
@@ -283,4 +273,17 @@ register_suite "md_test/" [
                     [Par [Text "This is the second item"]]]]
             ["11. This is an item",
              "2. This is the second item"])
+]
+, Test.suite "inline/" [
+    mixed_inline_test1
+  , mixed_inline_test2
+  , inline_code_test1
+  , inline_code_test2
+  , inline_code_test3
+  , inline_code_test4
+  , url_test1
+  , anchor_test1
+  , img_test1
+  ]
 ];
+end;

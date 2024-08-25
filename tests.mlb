@@ -1,12 +1,8 @@
 $(SML_LIB)/basis/basis.mlb
 common.mlb
-test/xunit.sml
+test/xunit.mlb
 test/lexer_test.sml
 test/md_test.sml
 test/html5_test.sml
 test/utils_test.sml
-test/reporter.sig
-test/junit_tt.sml
-test/verbose_tt.sml
-test/runner.sml
 src/main.sml

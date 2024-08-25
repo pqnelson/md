@@ -1,5 +1,6 @@
+structure LexerTest : SUITE = struct
 fun assert_token_eq (expected, actual) =
-    assert_eq(expected,
+    Assert.eq(expected,
               actual,
               "\n## Expected token '" ^
               (serialize_token expected) ^ "',\n" ^
@@ -14,16 +15,16 @@ This will even test if the lexer is finally finished after
 trying to match against the expected tokens.
 *)
 fun mk_test name lines expected_tokens =
-    test name
-         (fn () =>
-             let
-               val s = (String.concatWith "\n" lines);
-               val lexer = Lexer.mk_lexer s;
-             in
-               assert
-                   "Lexer is finished"
-                   (Lexer.is_finished (
-                 foldl (fn (expected, l) : Token * Lexer.t =>
+  Test.new name
+           (fn () =>
+               let
+                 val s = (String.concatWith "\n" lines);
+                 val lexer = Lexer.mk_lexer s;
+               in
+                 Assert.!!
+                     "Lexer is finished"
+                     (Lexer.is_finished (
+                         foldl (fn (expected, l) : Token * Lexer.t =>
                            let
                              val (next, actual, _) = Lexer.lex l
                            in
@@ -162,11 +163,13 @@ val test_comment1 =
              TextToken "by newline"];
 
 
-register_suite "lexer_test/" [
-  test1
-, test_header1
-, test_header2
-, test_mistake_header1
-, test_mistaken_identity_tokens1
-, test_comment1
-]
+val suite = Test.register_suite "lexer_test/" [
+    test1
+  , test_header1
+  , test_header2
+  , test_mistake_header1
+  , test_mistaken_identity_tokens1
+  , test_comment1
+  ];
+
+end;
