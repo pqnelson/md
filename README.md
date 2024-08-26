@@ -103,6 +103,13 @@ binary. It will take the name of `input.md` files, then produce
 the input is a name that ends with `.md` --- and then replacing it with
 `.html`; otherwise, it just appends a `.html` to whatever the input name is.)
 
+# Running the unit tests
+
+This depends on [SML-Xunit](https://github.com/pqnelson/sml-xunit)
+being in a sibling directory. If it's 
+not, then just clone it, and modify line 3 of the [tests.mlb](./tests.mlb) file
+to point to wherever `$SML_Xunit/xunit.mlb` is located.
+
 # See also
 
 There are probably many other Markdown parsers which are more
