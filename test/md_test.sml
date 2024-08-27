@@ -225,6 +225,15 @@ val TeX_test3 =
              , "\\begin{equation}f**g=\\int(mess)dx\\end{equation}"
              , " when encountering two asterisks!**"]];
 
+val ul_test6 =
+  ast_test "ul_test6"
+           [UList [[Par [Text "We want predicates testing if the test result records a success,\nfailure, or error."]]
+                  ,[Par [Text "We want to count the number of successes, failures, and errors which\noccurred when running a test. For test cases, these will be at most\n1."]]]]
+           ["- We want predicates testing if the test result records a success,"
+           ,"  failure, or error."
+           ,"- We want to count the number of successes, failures, and errors which"
+           ,"  occurred when running a test. For test cases, these will be at most"
+           ,"  1."]
 
 val suite = Test.register_suite "md_test/" [
     Test.suite "block/" [
@@ -288,6 +297,7 @@ val suite = Test.register_suite "md_test/" [
     "- This is the second item",
     "",
     "Just some text"])
+, ul_test6
 , (ast_test "ol_test1"
             [OList [[Par [Text "This is an item"]],
                     [Par [Text "This is the second item"]]]]

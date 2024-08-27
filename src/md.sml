@@ -473,9 +473,13 @@ fun pre (lines : string list) =
 (* NB: items start look like "[digit]+. .*",
    in particular it need not be sequential! *)
 fun starts_olist (line : string) =
-  case str_indexof (fn c => #"." = c) line of
+  case CharVector.findi (fn (i, c) =>
+                            #"." = c andalso
+                            (i + 1 < size line) andalso
+                            Char.isSpace(String.sub(line, i + 1)))
+                        line of
       NONE => false
-    | SOME i => (String.size(line) > i) andalso
+    | SOME(i,_) => (String.size(line) > i) andalso
                 (CharVector.all
                    (fn c => Char.isDigit c)
                    (String.substring(line, 0, i))) andalso
