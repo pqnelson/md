@@ -225,6 +225,9 @@ fun usage () =
   print("    to all subdirectories. Accepts comma-separated\n");
   print("    values (with NO SPACES), or multiple appearances.\n");
   print("    \n");
+  print("    Semantically identical to passing as files\n");
+  print("    '$(find dir -name *.md)'\n");
+  print("    \n");
   print("    NOTE: when combined with --output, this will create\n");
   print("    correspondingly named directories in the --output's dir\n");
   print("    (if needed).\n");
@@ -390,8 +393,7 @@ fun run args =
      else app (fn srcdir =>
                   let
                     val subdir = OS.Path.file (format_dir srcdir);
-                    val outdir = mkdir_in (OS.FileSys.fullPath out)
-                                          subdir;
+                    val outdir = OS.FileSys.fullPath out;
                   in
                     recur_on_dir css_files katex_hdr outdir srcdir
                   end)
