@@ -232,41 +232,43 @@ If no such delimiter is found in the next character, then it
 should simply increment the position parameter.
 *)
 fun skip_tex s len pos =
-    if #"$" = String.sub(s,pos)
-    then (if len > pos + 1 andalso
-             #"$" = String.sub(s,pos+1)
-          then (case string_indexof_from "$$" s (pos + 2) of
-                    NONE => pos + 2
-                  | SOME i => i + 2)
-          else (case string_indexof_from "$" s (pos + 1) of
-                    NONE => pos + 1
-                  | SOME i => i + 1))
-    else if len > pos + 1 andalso
-            #"\\" = String.sub(s,pos)
-    then (if #"(" = String.sub(s,pos+1)
-          then (case string_indexof_from "\\)" s (pos + 1) of
-                    NONE => pos + 1
-                  | SOME i => i + 2)
-          else if #"[" = String.sub(s,pos+1)
-          then (case string_indexof_from "\\]" s (pos + 1) of
-                    NONE => pos + 1
-                  | SOME i => i + 2)
-          else if len > size("begin{equation}") andalso
-                  EQUAL = String.compare(
-                    String.substring(s, pos+1, 15),
-                    "begin{equation}")
-          then (case string_indexof_from "\\end{equation}" s (pos + 1) of
-                    NONE => pos + 1
-                  | SOME i => i + 14) (* i + size "\\end{equation}" *)
-          else if len > size("begin{align}") andalso
-                  EQUAL = String.compare(
-                    String.substring(s, pos+1, 12),
-                    "begin{align}")
-          then (case string_indexof_from "\\end{align}" s (pos + 1) of
-                    NONE => pos + 1
-                  | SOME i => i + 11) (* i + size("\\end{align}") *)
-          else pos + 1)
-    else pos + 1;
+  if pos >= len
+  then len
+  else if #"$" = String.sub(s,pos)
+  then (if len > pos + 1 andalso
+           #"$" = String.sub(s,pos+1)
+        then (case string_indexof_from "$$" s (pos + 2) of
+                  NONE => pos + 2
+                | SOME i => i + 2)
+        else (case string_indexof_from "$" s (pos + 1) of
+                  NONE => pos + 1
+                | SOME i => i + 1))
+  else if len > pos + 1 andalso
+          #"\\" = String.sub(s,pos)
+  then (if #"(" = String.sub(s,pos+1)
+        then (case string_indexof_from "\\)" s (pos + 1) of
+                  NONE => pos + 1
+                | SOME i => i + 2)
+        else if #"[" = String.sub(s,pos+1)
+        then (case string_indexof_from "\\]" s (pos + 1) of
+                  NONE => pos + 1
+                | SOME i => i + 2)
+        else if len > pos + size("begin{equation}") andalso
+                EQUAL = String.compare(
+                  String.substring(s, pos+1, 15),
+                  "begin{equation}")
+        then (case string_indexof_from "\\end{equation}" s (pos + 1) of
+                  NONE => pos + 1
+                | SOME i => i + 14) (* i + size "\\end{equation}" *)
+        else if len > pos + size("begin{align}") andalso
+                EQUAL = String.compare(
+                  String.substring(s, pos+1, 12),
+                  "begin{align}")
+        then (case string_indexof_from "\\end{align}" s (pos + 1) of
+                  NONE => pos + 1
+                | SOME i => i + 11) (* i + size("\\end{align}") *)
+        else pos + 1)
+  else pos + 1;
 
 (* interrupted_TeX_index : string -> int -> int -> int -> int option
 

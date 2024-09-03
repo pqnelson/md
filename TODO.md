@@ -1,3 +1,17 @@
+- [ ] Itemized lists `- ` will accidentally capture things when it
+      should not, e.g.,
+      ```
+      - item 1
+      - item 2
+        
+      **Case 3:**
+      ```
+      Ends up capture `**C` as part of the list (while simultaneously
+      _not_ displaying it?). It appears that this is a false positive
+      for determining if it's a list start...?
+- [ ] Inline code should preserve whitespace. Right now,
+      `     foo bar    ` and ` foo bar ` translated to HTML render
+      indistinguishable results.
 - [ ] Inline code, for Github pages, uses `` `code snippet`{:.language} ``
       for highlighting inline code. This seems fine, I should try to
       adhere to this spec.
@@ -38,3 +52,12 @@
       keeps on working. We extract a string from it once the dust has
       settled using `MONO_ARRAY.copy` (to "shrink to fit"), then
       `MONO_ARRAY.vector` (to generate the vector). 
+
+...
+
+Actually, after thinking about this, a number of bugs due to
+"edgecases" would be solved by using substrings when parsing blocks.
+
+This should be my next major "push".
+
+Then I think I can put a pause on this effort.
