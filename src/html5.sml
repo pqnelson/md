@@ -83,22 +83,25 @@ fun emit_block syntax_highlight block =
         Par elts =>
         (case elts of
              (* Hack for div blocks *)
-             [(Text e)] => if String.isPrefix "<div" e orelse
-                              String.isPrefix "</div>" e
-                           then e
-                           else ("\n<p>\n" ^
-                                 e ^
-                                 "\n</p>\n")
+             [(elt as (Text e))] =>
+                 if String.isPrefix "<div" e orelse
+                    String.isPrefix "</div>" e
+                 then e
+                 else ("\n<p>\n" ^
+                       (emit_inline elt) ^
+                       "\n</p>\n")
            | _ =>  ("\n<p>\n" ^
                     (concat (map emit_inline elts)) ^
                     "\n</p>\n"))
-      | Pre (code,NONE) => ("\n<pre>"^
-                            (syntax_highlight code) ^
-                            "</pre>\n")
-      | Pre (code,SOME language) =>
-        ("\n<pre data-lang=\""^
-         language^
-         "\" class=\"src\">" ^
+      | (Pre {code,language=NONE,...}) => ("\n<pre>"^
+                                           (syntax_highlight code) ^
+                                           "</pre>\n")
+      | Pre {code,language=SOME lang,is_example} =>
+        ("\n<pre data-lang=\"" ^
+         lang ^
+         "\" class=\"" ^
+         (if is_example then "example" else "src") ^
+         "\">" ^
          (syntax_highlight code) ^
          "</pre>\n")
       | Heading (lvl, title) =>

@@ -3,23 +3,24 @@ fun html5_test name
                (expected_lines : string list)
                (actual_lines : string list) =
   Test.new name
-         (fn () =>
-             let
-               val expected = concat expected_lines;
-               val actual = html5 (String.concatWith
-                                       "\n"
-                                       actual_lines)
-                                  ""
-                                  "";
-             in
-               Assert.eq (expected, actual,
-                          ("## EXPECTED: \"" ^
-                           expected ^
-                           "\"\n" ^
-                           "## ACTUAL: \"" ^
-                           actual ^
-                           "\"\n"))
-             end);
+           (fn () =>
+               let
+                 val expected = concat expected_lines;
+                 val actual = html5 (String.concatWith
+                                         "\n"
+                                         actual_lines)
+                                    ""
+                                    "";
+               in
+                 Assert.eq expected
+                           actual
+                           ("## EXPECTED: \"" ^
+                            expected ^
+                            "\"\n" ^
+                            "## ACTUAL: \"" ^
+                            actual ^
+                            "\"\n")
+               end);
 
 val html5_test1 =
 html5_test "simple_html5_test1"

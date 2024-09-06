@@ -9,7 +9,7 @@ fun mk_string_fn_test f name expected raw =
                         "'\n## ACTUAL: '"^
                         actual ^ "'");
            in
-           Assert.eq(expected, actual, msg)
+           Assert.eq expected actual msg
            end);
 
 fun mk_string_trim_test name expected raw =
@@ -38,7 +38,7 @@ val string_indexof_from_test1 =
                          "\n## ACTUAL "^
                          (serialize_opt_i actual)^"\n";
              in
-               Assert.eq (expected, actual, msg)
+               Assert.eq expected actual msg
              end);
 
 val string_indexof_test1 =
@@ -53,24 +53,24 @@ val string_indexof_test1 =
                          "\n## ACTUAL "^
                          (serialize_opt_i actual)^"\n";
              in
-               Assert.eq (expected, actual, msg)
+               Assert.eq expected actual msg
              end);
 
 val string_indexof_test2 =
   Test.new "str_indexof_test2"
-         (fn () =>
-             let
-               val s = "- foo";
-               val i = (case str_indexof (fn c => #" " = c) s of
-                            SOME j => j
-                          | NONE => ~1);
-             in
-               Assert.eq((SOME 1),
-                         (str_indexof (fn c => #" " = c) s),
-                         concat(["Index of ' ' in \"- foo\" ",
-                                 "expected to be 1 ",
-                                 "actual: ",
-                                 Int.toString(i)]))
+           (fn () =>
+               let
+                 val s = "- foo";
+                 val i = (case str_indexof (fn c => #" " = c) s of
+                              SOME j => j
+                            | NONE => ~1);
+               in
+                 Assert.eq (SOME 1)
+                           (str_indexof (fn c => #" " = c) s)
+                           (concat ["Index of ' ' in \"- foo\" ",
+                                    "expected to be 1 ",
+                                    "actual: ",
+                                    Int.toString(i)])
              end);
 
 val suite = Test.register_suite "utils_test/" [

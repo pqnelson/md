@@ -35,10 +35,15 @@ fun serialize f =
                                           (List.map Inline.serialize
                                                     items))^
                        "]")
-  | (Pre (body,meta)) =>
-    (case meta of
-        NONE => ("Pre ("^(f body)^", NONE)")
-     | (SOME m) => ("Pre ("^(f body)^", SOME "^m^")"))
+  | (Pre {code,language,is_example}) =>
+    ("Pre {code = "^(f code)^
+     ", is_example = " ^
+     (if is_example then "true" else "false")^
+     ", language = "^
+     (case language of
+          NONE => "NONE"
+        | (SOME m) => ("SOME "^m))^
+     "}")
   | (Heading (lvl, x)) =>
     ("Heading ("^(Int.toString(lvl))^
      ", [" ^

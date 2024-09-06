@@ -19,7 +19,7 @@ fun assert_ast_eq (expected : string Block list)
                          (map serialize_block actual)) ^
                     "]\n"
         in
-          Assert.!! msg (expected = actual)
+          Assert.!! (expected = actual) msg
         end);
 
 fun ast_test name expected actual =
@@ -73,7 +73,9 @@ val bq_test2 =
 val bq_test3 =
     ast_test "blockquote_test3"
              [Quote [Par [Text "This is another example"],
-                     Pre ("Blah Blah Blah", NONE)]
+                     Pre {code = "Blah Blah Blah",
+                          language = NONE,
+                          is_example = false}]
              ]
              ["> This is another example",
               "> ",
@@ -84,7 +86,9 @@ val bq_test3 =
 val bq_test4 =
     ast_test "blockquote_test4"
              [Quote [Par [Text "This is another example"],
-                     Pre ("Blah Blah Blah", NONE)]
+                     Pre { code = "Blah Blah Blah"
+                         , language = NONE
+                         , is_example = false}]
              ]
              ["> This is another example",
               "> ```",
@@ -93,15 +97,20 @@ val bq_test4 =
 
 val pre_test1 =
     ast_test "pre_test1 (code block with language name given)"
-             [Pre ("Blah Blah Blah", SOME "brainfuck")]
+             [Pre { code = "Blah Blah Blah"
+                  , language = SOME "brainfuck"
+                  , is_example = false
+                  }]
              ["```brainfuck",
               "Blah Blah Blah",
               "```"];
 
 val pre_test2 =
     ast_test "pre_test2 (example nested code block)"
-             [Pre ("    ```\n    example code block\n    ```",
-                   NONE)]
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = NONE
+                  , is_example = false
+                  }]
              ["```",
               "    ```",
               "    example code block",

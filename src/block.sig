@@ -4,12 +4,15 @@ In a list, each <li> may consist of multiple blocks.
 And a <ol> (resp., <ul>) is just a list of <li> elements.
 *)
 datatype 'a Block =
-         Par of Inline list
-       | Pre of 'a * (string option)
-       | Heading of int * (Inline list)
-       | Quote of ('a Block list)
-       | UList of (('a Block list) list)
-       | OList of (('a Block list) list);
+           Par of Inline list
+         | Pre of {code : 'a
+                  , language : (string option)
+                  , is_example : bool
+                  }
+         | Heading of int * (Inline list)
+         | Quote of ('a Block list)
+         | UList of (('a Block list) list)
+         | OList of (('a Block list) list);
 
 signature BLOCK = sig
   val map : ('a Block -> 'b Block) -> 'a Block -> 'b Block;

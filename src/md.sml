@@ -448,27 +448,36 @@ fun pre_meta (line::_) =
     fun trim_ast lang = if String.isSuffix "*" lang
                         then String.extract(lang,0, SOME((size lang)-1))
                         else lang;
+    fun ex_status lang = String.isSuffix "*" lang;
     (* line always looks like "```...\n" *)
     val raw = String.extract(line, 3, NONE);
   in
     if blank_line raw
-    then NONE
+    then (NONE, false)
     else (case str_indexof Char.isSpace raw of
-              NONE => SOME(trim_ast raw)
-            | SOME i => SOME(trim_ast (String.substring(raw,0,i))))
+              NONE => (SOME(trim_ast raw), false)
+            | SOME i => let
+                          val lang = String.substring(raw,0,i)
+                        in
+                          (SOME(trim_ast lang),
+                           ex_status(lang))
+                        end)
   end
-  | pre_meta _ = NONE; 
+  | pre_meta _ = (NONE, true); 
 
 fun pre (lines : string list) =
   let
-    val meta = pre_meta lines;
+    val (lang, is_ex) = pre_meta lines;
     fun ends_pre l = String.isPrefix "```" l;
     val (body,rest) = (case list_indexof ends_pre (tl lines) of
                            NONE => (lines, [])
                          | SOME i => (List.take(tl lines, i),
                                       List.drop(tl lines, i+1)));
   in
-    (Pre (String.concatWith "\n" body, meta),
+    (Pre { code = String.concatWith "\n" body
+         , language = lang
+         , is_example = is_ex
+         },
      rest)
   end;
 

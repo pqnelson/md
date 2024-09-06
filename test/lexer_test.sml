@@ -22,7 +22,6 @@ fun mk_test name lines expected_tokens =
                  val lexer = Lexer.mk_lexer s;
                in
                  Assert.!!
-                     "Lexer is finished"
                      (Lexer.is_finished (
                          foldl (fn (expected, l) : Token * Lexer.t =>
                            let
@@ -33,6 +32,7 @@ fun mk_test name lines expected_tokens =
                            end)
                        lexer
                        expected_tokens))
+                     "Lexer is finished"
              end);
 
 val test1 = mk_test "test1"
