@@ -117,6 +117,18 @@ val pre_test2 =
               "    ```",
               "```"];
 
+val pre_test3 =
+    ast_test "pre_test3 (example code block)"
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = SOME "sml"
+                  , is_example = true
+                  }]
+             ["```sml*",
+              "    ```",
+              "    example code block",
+              "    ```",
+              "```"];
+
 (* Github does this, as of 19 August 2024 *)
 val mixed_inline_test1 =
     ast_test "mixed_inline_test1"
@@ -257,6 +269,7 @@ val suite = Test.register_suite "md_test/" [
 , bq_test4
 , pre_test1
 , pre_test2
+, pre_test3
 , (ast_test "ul_test1"
             [UList [[Par [Text "This is an item"]],
                     [Par [Text "This is the second item"]]]]

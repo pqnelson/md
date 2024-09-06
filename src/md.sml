@@ -455,7 +455,8 @@ fun pre_meta (line::_) =
     if blank_line raw
     then (NONE, false)
     else (case str_indexof Char.isSpace raw of
-              NONE => (SOME(trim_ast raw), false)
+              NONE => (SOME(trim_ast raw),
+                       ex_status raw)
             | SOME i => let
                           val lang = String.substring(raw,0,i)
                         in
