@@ -8,12 +8,12 @@ fun assert_ast_eq (expected : string Block list)
     (fn () =>
         let
           val (_, actual) = Md.parse (String.concatWith "\n" lines);
-          val msg = "## EXPECTED: [" ^
+          val msg = "\n## EXPECTED: [" ^
                     (String.concatWith
                          ", "
                          (map serialize_block expected)) ^
                     "]\n" ^
-                    "## ACTUAL: [" ^
+                    "## ACTUAL:   [" ^
                     (String.concatWith
                          ", "
                          (map serialize_block actual)) ^
@@ -27,7 +27,7 @@ fun ast_test name expected actual =
 
 val header_test1 =
     ast_test "header_test1"
-             [Heading (2, [Text " This is an example\n"]),
+             [Heading (2, [Text " This is an example"]),
               Quote [Par [Text "Blockquote 1"]]]
              ["## This is an example",
               "",
@@ -36,7 +36,7 @@ val header_test1 =
 (* That's 10 "#" leading the header *)
 val header_test2 =
     ast_test "header_test2"
-             [Heading (6, [Text " This is another example\n"]),
+             [Heading (6, [Text " This is another example"]),
               Par [Text "Blah Blah Blah"]]
              ["########## This is another example",
               "",
@@ -45,8 +45,7 @@ val header_test2 =
 val header_test3 =
     ast_test "header_test3"
              [Heading (1, [Text " This is another example ",
-                           Anchor "anchor-for-header",
-                           Text "\n"]),
+                           Anchor "anchor-for-header"]),
               Par [Text "Blah Blah Blah"]]
              ["# This is another example [#anchor-for-header]",
               "",
@@ -72,7 +71,7 @@ val bq_test2 =
 
 val bq_test3 =
     ast_test "blockquote_test3"
-             [Quote [Par [Text "This is another example"],
+             [Quote [Par [Text "This is another example\n"],
                      Pre {code = "Blah Blah Blah",
                           language = NONE,
                           is_example = false}]
@@ -85,7 +84,7 @@ val bq_test3 =
 
 val bq_test4 =
     ast_test "blockquote_test4"
-             [Quote [Par [Text "This is another example"],
+             [Quote [Par [Text "This is another example\n"],
                      Pre { code = "Blah Blah Blah"
                          , language = NONE
                          , is_example = false}]
@@ -333,7 +332,7 @@ val suite = Test.register_suite "md_test/" [
             ["+ This is an item",
              "+ This is the second item"])
 , (ast_test "ul_test3"
-            [UList [[Par [Text "This is an item"],
+            [UList [[Par [Text "This is an item\n"],
                      Par [Text "And a second paragraph in the first item."]],
                     [Par [Text "This is the second item"]]],
             Par [Text "Just some text"]]
@@ -345,7 +344,7 @@ val suite = Test.register_suite "md_test/" [
              "Just some text"])
 , (ast_test
    "ul_test4"
-   [UList [[Par [Text "This is an item"],
+   [UList [[Par [Text "This is an item\n"],
             UList [[Par [Text "A sublist"]],
                    [Par [Text "And a second paragraph in the first item."]]]],
            [Par [Text "This is the second item"]]],
@@ -359,7 +358,7 @@ val suite = Test.register_suite "md_test/" [
     "Just some text"])
 , (ast_test
    "ul_test5"
-   [UList [[Par [Text "This is an item"],
+   [UList [[Par [Text "This is an item\n"],
             UList [[Par [Text "A sublist"]],
                    [Par [Text "And a second paragraph in the first item."]]]],
            [Par [Text "This is the second item"]]],

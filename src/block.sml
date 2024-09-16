@@ -36,8 +36,8 @@ fun serialize f =
                                                     items))^
                        "]")
   | (Pre {code,language,is_example}) =>
-    ("Pre {code = "^(f code)^
-     ", is_example = " ^
+    ("Pre {code = \""^(f code)^
+     "\", is_example = " ^
      (if is_example then "true" else "false")^
      ", language = "^
      (case language of

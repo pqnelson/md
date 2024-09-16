@@ -89,6 +89,9 @@ element for HTML), and `![image description](url)`.
  *)
 
 structure Md : MD = struct
+
+type metadata = (string * string) list;
+
 (* parse_inline : string -> Inline list
 
 Given a "paragraph" of text (i.e., a bunch of lines of
@@ -416,96 +419,211 @@ and scan s len pos =
 
 fun parse_inline s = scan s (String.size s) 0;
 
+(* blank_line : substring -> bool
 
-fun blank_line (line : string) =
-    CharVector.all Char.isSpace line;
+Tests if the contents of the first line of the substring
+consists of space characters.
+*)
+fun blank_line (body : substring) =
+  case CharVectorSlice.findi (fn (i,c) => #"\n" = c) body of
+      NONE => CharVectorSlice.all Char.isSpace body
+    | SOME (i,_) => CharVectorSlice.all Char.isSpace
+                                        (Substring.slice (body, 0, SOME i));
 
-fun header (lines : string list) =
+(* next_line : substring -> substring
+
+Returns the substring starting after the first `#"\n"`
+character.
+
+If there are none, returns the empty substring.
+*)
+fun next_line (body : substring) =
+  case CharVectorSlice.findi (fn (i,c) => #"\n" = c) body of
+      SOME(i,_) => Substring.slice(body, i + 1, NONE)
+    | NONE => Substring.slice(body, Substring.size body, NONE); 
+
+(* header : substring -> ('a Block) * substring
+
+Expects one or more hashtags `#`, followed by a space, then
+the header title.
+
+More than 6 hashtags "truncated" down to 6 automatically. So
+`############ foo` is treated as if it were `###### foo`.
+
+ASSUMES: the body starts with a #"#" character
+ENSURES: the result is the header and the following line
+*)
+fun header (lines : substring) =
   let
-    val (header_lines, rest) =
-        case list_indexof blank_line lines of
-            (SOME i) => (List.take (lines, i+1),
-                         List.drop (lines, i+1))
-          | NONE => (lines, []);
-    val lead_line = hd header_lines;
+    val (header_line, rest) =
+        case CharVectorSlice.findi (fn (i,c) => #"\n" = c) lines
+         of
+            SOME(i,_) => (Substring.slice(lines, 0, SOME i),
+                          Substring.slice(lines, i + 1, NONE))
+          | NONE => (lines,
+                     Substring.slice(lines, Substring.size lines, NONE));
     val header_count =
-        case str_indexof Char.isSpace lead_line of
-            NONE => String.size lead_line
-          | SOME i => i;
-    val ls =
-        (String.extract(lead_line,header_count,NONE)) ::
-        (tl header_lines);
-    val txt = String.concatWith "\n" ls;
-    val header_txt = parse_inline txt;
+      case CharVectorSlice.findi
+               (fn (_,c) => Char.isSpace c)
+               header_line of
+            NONE => Substring.size header_line
+          | SOME (i,_) => i;
+    val txt = Substring.slice(header_line, header_count, NONE);
+    val header_txt = parse_inline (Substring.string txt);
   in
     (Heading (Int.min(6, header_count),
               header_txt),
      rest)
   end;
 
-fun is_example (line) =
+fun substring_trim_lead (s : substring) =
+  case CharVectorSlice.findi (fn (i,c) => not (Char.isSpace c))
+                             s of
+      NONE => s
+    | (SOME (i,c)) => Substring.slice(s, i, NONE);
+
+fun substring_trim_tail (s : substring) =
+  if Substring.isEmpty s
+  then s
+  else if Char.isSpace (Substring.sub(s, Substring.size(s) - 1))
+  then substring_trim_tail (Substring.slice(s,
+                                            0,
+                                            SOME (Substring.size s - 1)))
+  else s;
+
+fun substring_trim (s : substring) =
+  (substring_trim_lead o substring_trim_tail) s;
+
+(* is_example : substring -> bool
+
+ASSUME: line has at most one `#"\n"` character, at the very
+        end of it
+ENSURES: result is true if "{...,example,...}" appears in line
+                        OR "{...,example=v,...}" appears
+                           and `v` is not "false"
+         result is false otherwise.
+*)
+fun is_example (line : substring) =
   let
+    fun indexof (f : char -> bool) (s : substring) =
+      (case CharVectorSlice.findi (fn (i,c) => f c) s of
+           NONE => NONE
+         | SOME (i,c) => SOME i);
     fun get i j =
-      (case List.filter (fn s => String.isPrefix "example" s)
-                        (map string_trim
-                             (String.fields
-                                  (fn c => #"," = c)
-                                  (String.extract(line, i+1, j))))
-        of
-           [] => false
-         | entries => List.exists
-                          (fn entry =>
-                              ("example" = entry) orelse
-                              (case ((map string_trim) o
-                                     (String.fields (fn c => #"=" = c)))
-                                        entry
-                                of
-                                   ["example", rhs] => "false" <> rhs
-                                 | _ => false))
-                          entries);
+      case (List.filter (fn token =>
+                            Substring.isPrefix "example" token)
+                        (map substring_trim
+                             (Substring.tokens (fn c => #"," = c)
+                                               (Substring.slice(line,i,j)))))
+       of
+          [] => false
+        | entries => List.exists
+                         (fn e =>
+                             let
+                               val entry = Substring.string e
+                             in
+                               ("example" = entry) orelse
+                               (case (map string_trim
+                                          (String.fields
+                                               (fn c => #"=" = c)
+                                               entry))
+                                 of
+                                    ["example", rhs] => ("false" <> rhs)
+                                  | _ => false)
+                             end)
+                         entries;
   in
-    case (str_indexof (fn c => #"{" = c) line,
-          str_indexof (fn c => #"}" = c) line) of
-        (NONE, _) => false
-      | (SOME i, SOME j) => get i (SOME (j - i - 1))
-      | (SOME i, NONE) => get i NONE
+    case (indexof (fn c => #"{" = c) line,
+          indexof (fn c => #"}" = c) line) of
+        (SOME i, SOME j) => (get (i+1) (SOME (j - i - 1)))
+      | _ => false 
   end;
 
-fun pre_meta (line::_) =
-  let
-    fun trim_ast lang = if String.isSuffix "*" lang
-                        then String.extract(lang,0, SOME((size lang)-1))
-                        else lang;
-    fun ex_status lang = String.isSuffix "*" lang;
-    (* line always looks like "```...\n" *)
-    val raw = String.extract(line, 3, NONE);
-  in
-    if blank_line raw
-    then (NONE, false)
-    else (case str_indexof Char.isSpace raw of
-              NONE => (SOME(trim_ast raw),
-                       (ex_status raw) orelse
-                       (is_example line))
-            | SOME i => let
-                          val lang = String.substring(raw,0,i)
-                        in
-                          (SOME(trim_ast lang),
-                           (ex_status lang) orelse
-                           (is_example line))
-                        end)
-  end
-  | pre_meta _ = (NONE, true); 
+(* pre_meta : substring -> string option * bool
 
-fun pre (lines : string list) =
+Returns the name of the language, and if the code chunk is an
+example or not.
+
+If the language ends in an asterisk, then this is interpreted
+as always an example.
+
+ASSUMES: body starts with three backticks
+ENSURES: result is (NONE, false) if body starts with blank_line
+ result is (lang, false) if body looks like "```lang\n..."
+ result is (lang, true) if body looks like "```lang*\n..."
+                           OR "```lang {...,example,...}\n..."
+                           OR "```lang {...,example=v,...}\n..."
+                              and `v` is not "false"
+ *)
+fun pre_meta (body : substring) =
   let
-    val (lang, is_ex) = pre_meta lines;
-    fun ends_pre l = String.isPrefix "```" l;
-    val (body,rest) = (case list_indexof ends_pre (tl lines) of
-                           NONE => (lines, [])
-                         | SOME i => (List.take(tl lines, i),
-                                      List.drop(tl lines, i+1)));
+    fun trim_ast lang =
+      Substring.string
+          (if Substring.isSuffix "*" lang
+           then Substring.slice(lang,
+                                0,
+                                SOME((Substring.size lang)-1))
+           else lang);
+    fun ex_status lang = Substring.isSuffix "*" lang;
+    (* body always looks like "```...\n", so skip the
+       backticks and jump to first non whitespace character.
+     *)
+    val line = (case CharVectorSlice.findi
+                        (fn (i,c) =>
+                            i > 2 andalso
+                            (not(Char.isSpace c) orelse
+                             #"\n" = c))
+                        body of
+                   NONE => Substring.slice(body,
+                                           Substring.size body,
+                                           NONE)
+                 | (SOME (i,_)) => Substring.slice(body, i, NONE));
   in
-    (Pre { code = String.concatWith "\n" body
+    if blank_line line
+    then (NONE, false)
+    else (case CharVectorSlice.findi
+                   (fn (i,c) => Char.isSpace c)
+                   line of
+              NONE => (NONE, false)
+            | SOME(i,_) =>
+                 let
+                   val lang = Substring.slice(line, 0, SOME i)
+                 in
+                   (SOME(trim_ast lang),
+                    (ex_status lang) orelse
+                    (is_example line))
+                 end)
+  end;
+
+(* pre : substring -> string Block * substring
+
+CommonMark insists unclosed code blocks are closed by the end
+of the document.
+ *)
+fun pre (body : substring) =
+  let
+    val (lang, is_ex) = pre_meta body;
+    val b1 = next_line body;
+    val (code_body,rest) =
+      (case CharVectorSlice.findi
+                (fn (i,c) =>
+                    i + 2 < Substring.size b1 andalso
+                    (0 = i orelse
+                     (i > 0 andalso
+                      #"\n" = Substring.sub(b1, i - 1))) andalso
+                    #"`" = c andalso
+                    #"`" = Substring.sub(b1, i + 1) andalso
+                    #"`" = Substring.sub(b1, i + 2))
+                b1 of
+           NONE => (b1,
+                    Substring.slice(b1, Substring.size b1, NONE))
+         | SOME(i,_) => (Substring.slice(b1, 0, SOME (i-1)),
+                         Substring.slice(b1,
+                                         Int.min(i + 3,
+                                                 Substring.size b1),
+                                         NONE)));
+  in
+    (Pre { code = Substring.string code_body
          , language = lang
          , is_example = is_ex
          },
@@ -514,160 +632,236 @@ fun pre (lines : string list) =
 
 (* NB: items start look like "[digit]+. .*",
    in particular it need not be sequential! *)
-fun starts_olist (line : string) =
-  case CharVector.findi (fn (i, c) =>
-                            #"." = c andalso
-                            (i + 1 < size line) andalso
-                            Char.isSpace(String.sub(line, i + 1)))
-                        line of
+fun starts_olist (body : substring) =
+  case CharVectorSlice.findi
+           (fn (i, c) =>
+               #"." = c andalso
+               (i + 1 < Substring.size body) andalso
+               Char.isSpace(Substring.sub(body, i + 1)))
+           body of
       NONE => false
-    | SOME(i,_) => (String.size(line) > i) andalso
-                (CharVector.all
-                   (fn c => Char.isDigit c)
-                   (String.substring(line, 0, i))) andalso
-                Char.isSpace(String.sub(line,i+1));
+    | SOME(i,_) =>
+      (Substring.size(body) > i) andalso
+      (CharVectorSlice.all
+           Char.isDigit
+           (Substring.slice(body, 0, SOME i))) andalso
+      Char.isSpace(Substring.sub(body, i + 1));
                             
 (* given the body to a paragraph, parse it to a list of inline
 fun par_body (lines : string list) =; *)
-fun starts_block (line : string) =
-    blank_line line orelse
-    starts_olist line orelse
-    List.exists (fn tok => String.isPrefix tok line)
+fun starts_block (body : substring) =
+    blank_line body orelse
+    starts_olist body orelse
+    List.exists (fn tok => Substring.isPrefix tok body)
                 ["```",
                  ">",
                  "- ",
                  "+ "];
 
-fun par (lines : string list) =
+(* par : substring -> 'a Block * substring
+
+ASSUMES: body starts with the first line of the paragraph
+ENSURES: result is (paragraph, rest)
+*)
+fun par (body : substring) =
   let
-    val (ps, rest) = case list_indexof starts_block lines of
-                         NONE => (lines, [])
-                       | SOME i => (List.take(lines, i),
-                                    List.drop(lines, i)); 
+    val (ps, rest) =
+      case CharVectorSlice.findi
+               (fn (i,c) =>
+                   #"\n" = c andalso
+                   i < Substring.size body andalso
+                   starts_block (Substring.slice(body, i+1, NONE)))
+               body of
+          NONE => (body,
+                   Substring.slice(body,
+                                   Substring.size body,
+                                   NONE))
+        | SOME (i,_) => (let
+                          val idx =
+                            Int.min(Substring.size(body),i+1);
+                        in (Substring.slice(body, 0, SOME(idx)),
+                            Substring.slice(body, idx, NONE))
+                        end);
   in
-    (Par (parse_inline (String.concatWith "\n" ps)),
+    (Par (parse_inline (Substring.string ps)),
      rest)
   end;
 
-fun blockquote (lines : string list) =
+(* blockquote : substring -> 'a Block * substring
+
+*)
+fun blockquote (body : substring) =
   let
-    fun is_blockquote (s : string) = (String.size(s) > 0 andalso
-                                      #">" = String.sub(s,0));
-    fun trim_bq (s : string) =
-        if String.isPrefix "> " s
-        then String.extract(s,2,NONE)
+    fun is_not_blockquote (i,c) =
+      (0 = i orelse
+       #"\n" = Substring.sub(body, i-1)) andalso
+      #">" <> c;
+    fun trim_bq (line : substring) =
+        if Substring.isPrefix "> " line
+        then Substring.slice(line,2,NONE)
      (* else we have ">" for separating paragraphs in blockquote *)
-        else String.extract(s,1,NONE);
+        else Substring.slice(line,1,NONE);
     val (quote_lines, rest) =
-        case list_indexof (not o is_blockquote) lines of
-            SOME i => ((List.take(lines, i)),
-                       List.drop(lines, i))
-          | NONE => (lines, []);
+        case CharVectorSlice.findi is_not_blockquote body of
+            SOME(i,_) => (Substring.slice(body, 0, SOME i),
+                          Substring.slice(body, i, NONE))
+          | NONE => (body,
+                     Substring.slice(body,
+                                     Substring.size body,
+                                     NONE));
   in
-    (Quote (parse_block (map trim_bq quote_lines)),
+    (Quote (parse_block_string
+                (((Substring.concatWith "\n") o
+                  (map trim_bq) o
+                  (Substring.tokens (fn c => #"\n" = c)))
+                     quote_lines)),
      rest)
   end
 
-(* parse_list : string list ->
-                (string -> bool) ->
-                ((Block list) list)
+(* parse_list : substring ->
+                (substring -> bool) ->
+                ((Block list) list) * substring
 
 NOTE: paragraphs in a list MUST be properly indented. Blank
 lines are considered "terminators" for lists.
  *)
-and parse_list (lines : string list)
-               (starts_item : string -> bool) = 
+and parse_list (lines : substring)
+               (starts_item : substring -> bool) = 
   let
-    fun is_item (line : string) =
-        (String.size(line) > 0 andalso
-         (starts_item line orelse
-          String.isPrefix "  " line)); (* XXX: check indentation? *)
-    fun trim_item (lines : string list) =
+    (* is_item : substring -> bool *)
+    fun is_item (line : substring) =
+      (Substring.sub(line, 0) <> #"\n" andalso
+       Substring.size(line) > 0 andalso
+       (starts_item line orelse
+        (* indented and nonblank line
+           or else followed by a line in an item *)
+        (Substring.isPrefix "  " line)));
+    (*
+          (Substring.isPrefix "  " line andalso (* XXX: check indentation? *)
+           (not (blank_line line) orelse
+            is_item (next_line line)))));
+    *)
+    (* trim_item : substring -> string *)
+    fun trim_item (lines : substring) =
         let
           val indent_size =
-              (case str_indexof Char.isSpace (hd lines) of
-                   SOME i => 1 + i
+            (case CharVectorSlice.findi
+                      (fn (i,c) => Char.isSpace c)
+                      lines of
+                   SOME (i,_) => 1 + i
                  | NONE => 3);
           val indent = implode(List.tabulate (indent_size,
                                               fn _ => #" "));
-          fun trim_line (line : string) =
-              if String.size(line) >= indent_size
-              then String.extract(line, indent_size, NONE)
+          fun trim_line (line : substring) =
+              if Substring.size(line) >= indent_size
+              then Substring.slice(line, indent_size, NONE)
               else line;
         in
-          map trim_line lines
+          (((Substring.concatWith "\n") o
+            (map trim_line) o
+            (Substring.tokens (fn c => #"\n" = c)))
+               lines)
         end;
     (* separate the list from the rest of the Markdown *)
+    fun find_rest ls = if Substring.isEmpty ls then ls
+                       else if is_item ls
+                       then find_rest (next_line ls)
+                       else ls;
+     (*
+     val (item_lines, rest) =
+      let
+        val r = find_rest lines;
+      in
+        case (Substring.base(r), Substring.base(lines)) of
+            ((_,idx,stop), (_,start,_)) =>
+            (Substring.slice(lines, 0, SOME (idx - start)),
+             r)
+      end;
+   *)
     val (item_lines, rest) =
-        case list_indexof (not o is_item) lines of
-            SOME i => (List.take (lines, i+1),
-                       List.drop (lines, i+1))
-          | NONE => (lines, []);
+      case CharVectorSlice.findi (fn (i,c) =>
+                                     #"\n" = c andalso
+                                     i+1 <= Substring.size lines andalso
+                                     ((not o is_item)
+                                          (Substring.slice(lines,i+1,NONE))))
+                                 lines of
+          NONE => (lines,
+                   Substring.slice(lines, Substring.size(lines), NONE))
+        | (SOME(i,_)) =>
+          (Substring.slice(lines,0,SOME(i)),
+           Substring.slice(lines,i,NONE));
     (* form the list of lines in each item *)
-    (* part_items : string list -> string list list *)
-    fun part_items [] acc = rev acc
-      | part_items (ls as h::t) acc =
-        (case list_indexof starts_item t of
-             SOME i => part_items (List.drop(t, i))
-                                  ((List.take(ls, i+1))::acc)
-           | NONE => rev (ls::acc));
+    (* part_items : substring -> substring list -> substring list *)
+    fun part_items ls acc =
+      if Substring.isEmpty ls
+      then rev acc
+      else (case CharVectorSlice.findi
+                     (fn (i,c) => i > 0 andalso
+                                  Substring.sub(ls, i-1) = #"\n" andalso
+                                  starts_item
+                                      (Substring.slice(ls,i,NONE)))
+                     ls of
+                (SOME(i,_)) => part_items (Substring.slice(ls,i,NONE))
+                                          ((Substring.slice(ls,0,SOME i))::acc)
+              | NONE => rev (ls::acc));
     (* recursively trim then parse each item for its block
        structure *)
-    val items = map (fn (item_lines : string list) =>
-                        parse_block (trim_item item_lines))
+    val items = map (fn (item_lines : substring) =>
+                        parse_block_string (trim_item item_lines))
                     (part_items item_lines []);
   in
     (* process and trim items *)
     (items, rest)
   end
 
-and ulist (lines : string list) (token : char) =
+and ulist (body : substring) (token : char) =
   let
-    fun starts_item (line : string) =
-        (String.size(line) > 1 andalso
-         token = String.sub(line, 0) andalso
-         #" " = String.sub(line,1));
-    val (items, rest) = parse_list lines starts_item;
+    fun starts_item (line : substring) =
+        (Substring.size(line) > 1 andalso
+         token = Substring.sub(line, 0) andalso
+         #" " = Substring.sub(line,1));
+    val (items, rest) = parse_list body starts_item;
   in
     (UList items, rest)
   end
 
-and olist (lines : string list) =
+and olist (body : substring) =
   let
-    val (items, rest) = parse_list lines starts_olist;
+    val (items, rest) = parse_list body starts_olist;
   in
     (OList items, rest)
   end
-(* parse_block : string list -> string Block list *)
-and parse_block lines =
+(* parse_block : substring -> string Block list *)
+and parse_block body =
   let
-    fun parse_iter acc =
-        (fn [] => rev acc
-          | (lines as line::_) =>
-            if blank_line line
-            then parse_iter acc (tl lines)
-            else 
-              let
-                val (block, rest) =
-                    if String.isPrefix "#" line
-                    then header lines
-                    else if String.isPrefix ">" line
-                    then blockquote lines
-                    else if String.isPrefix "```" line
-                    then pre lines
-                    else if String.isPrefix "- " line
-                    then ulist lines #"-"
-                    else if String.isPrefix "+ " line
-                    then ulist lines #"+"
-                    else if starts_olist line
-                    then olist lines
-                    else par lines;
-              in
-                parse_iter (block::acc) rest
-              end)
+    fun parse_iter acc (s : substring) =
+      if Substring.isEmpty s
+      then rev acc
+      else if blank_line s
+      then parse_iter acc (next_line s)
+      else let
+        val (block, rest) =
+          if Substring.isPrefix "#" s
+          then header s
+          else if Substring.isPrefix ">" s
+          then blockquote s
+          else if Substring.isPrefix "```" s
+          then pre s
+          else if Substring.isPrefix "- " s
+          then ulist s #"-"
+          else if Substring.isPrefix "+ " s
+          then ulist s #"+"
+          else if starts_olist s
+          then olist s
+          else par s;
+      in
+        parse_iter (block::acc) rest
+      end;
   in
-    parse_iter [] lines
-  end;
+    parse_iter [] body
+  end
+and parse_block_string (s : string) =
+    parse_block (Substring.full s);
 
 (* end of metadata : string -> int *)
 fun end_of_metadata (s : string) =
@@ -677,42 +871,44 @@ fun end_of_metadata (s : string) =
 fun starts_metadata (s : string) =
     String.isPrefix "---\n" s;
 
-(* extract_metadata : string -> ((string, string) list)*string *)
+(* extract_metadata : string -> ((string, string) list)*substring *)
 fun extract_metadata (s : string) =
     if not (starts_metadata s)
-    then ([], s)
+    then ([], Substring.full s)
     else (case end_of_metadata s of
-              NONE => ([], s)
+              NONE => ([], Substring.full s)
             | (SOME idx) =>
-    let
-      val header = String.substring(s,4,idx-3);
-      val lines = (String.tokens (fn c => #"\n" = c) header);
-      (* Each line looks like "key: value" *)
-      fun extract line =
-          case str_indexof (fn c => #":" = c) line of
-              NONE => NONE
-            | (SOME idx) => SOME (string_trim
-                                      (String.substring(line,0,idx)),
-                                  string_trim
-                                      (String.extract(line,idx+1,NONE)));
-      val meta = foldr (fn (line,acc) =>
-                           (case extract line of
-                                SOME c => c::acc
-                              | _ => acc))
-                       []
-                       lines;
-      val body = String.extract(s, idx+4, NONE);
-    in
-      (meta, body)
-    end);
+              let
+                val header = String.substring(s,4,idx-3);
+                (* ASSUME: each "key: value" takes place on
+                   exactly one line *)
+                val lines = (String.tokens (fn c => #"\n" = c)
+                                           header);
+                (* Each line looks like "key: value" *)
+                fun extract line =
+                  case str_indexof (fn c => #":" = c) line of
+                      NONE => NONE
+                    | (SOME idx) => SOME (string_trim
+                                              (String.substring(line,0,idx)),
+                                          string_trim
+                                              (String.extract(line,idx+1,NONE)));
+                val meta = foldr (fn (line,acc) =>
+                                     (case extract line of
+                                          SOME c => c::acc
+                                        | _ => acc))
+                                 []
+                                 lines;
+                val body = Substring.extract(s, idx+4, NONE);
+              in
+                (meta, body)
+              end);
 
 (* parse : string -> ((string * string) list) * (string Block list) *)
 fun parse (s : string) =
   let
     val (metadata,body) = extract_metadata s;
-    val lines =  (String.fields (fn c => #"\n" = c) body);
   in
-    (metadata, parse_block lines)
+    (metadata, parse_block body)
   end;
 
 end;
