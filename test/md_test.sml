@@ -129,6 +129,54 @@ val pre_test3 =
               "    ```",
               "```"];
 
+val pre_test4 =
+    ast_test "pre_test4 (example code block)"
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = SOME "sml"
+                  , is_example = true
+                  }]
+             ["```sml {example}",
+              "    ```",
+              "    example code block",
+              "    ```",
+              "```"];
+
+val pre_test5 =
+    ast_test "pre_test5 (example code block)"
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = SOME "sml"
+                  , is_example = false
+                  }]
+             ["```sml {example=false}",
+              "    ```",
+              "    example code block",
+              "    ```",
+              "```"];
+
+val pre_test6 =
+    ast_test "pre_test6 (example code block)"
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = SOME "sml"
+                  , is_example = true
+                  }]
+             ["```sml {example=spam}",
+              "    ```",
+              "    example code block",
+              "    ```",
+              "```"];
+
+val pre_test7 =
+    ast_test "pre_test7 (example code block)"
+             [Pre { code = "    ```\n    example code block\n    ```"
+                  , language = SOME "sml"
+                  , is_example = true
+                  }]
+             ["```sml {example=FaLsE}",
+              "    ```",
+              "    example code block",
+              "    ```",
+              "```"];
+
 (* Github does this, as of 19 August 2024 *)
 val mixed_inline_test1 =
     ast_test "mixed_inline_test1"
@@ -270,6 +318,10 @@ val suite = Test.register_suite "md_test/" [
 , pre_test1
 , pre_test2
 , pre_test3
+, pre_test4
+, pre_test5
+, pre_test6
+, pre_test7
 , (ast_test "ul_test1"
             [UList [[Par [Text "This is an item"]],
                     [Par [Text "This is the second item"]]]]

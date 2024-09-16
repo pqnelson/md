@@ -443,6 +443,34 @@ fun header (lines : string list) =
      rest)
   end;
 
+fun is_example (line) =
+  let
+    fun get i j =
+      (case List.filter (fn s => String.isPrefix "example" s)
+                        (map string_trim
+                             (String.fields
+                                  (fn c => #"," = c)
+                                  (String.extract(line, i+1, j))))
+        of
+           [] => false
+         | entries => List.exists
+                          (fn entry =>
+                              ("example" = entry) orelse
+                              (case ((map string_trim) o
+                                     (String.fields (fn c => #"=" = c)))
+                                        entry
+                                of
+                                   ["example", rhs] => "false" <> rhs
+                                 | _ => false))
+                          entries);
+  in
+    case (str_indexof (fn c => #"{" = c) line,
+          str_indexof (fn c => #"}" = c) line) of
+        (NONE, _) => false
+      | (SOME i, SOME j) => get i (SOME (j - i - 1))
+      | (SOME i, NONE) => get i NONE
+  end;
+
 fun pre_meta (line::_) =
   let
     fun trim_ast lang = if String.isSuffix "*" lang
@@ -456,12 +484,14 @@ fun pre_meta (line::_) =
     then (NONE, false)
     else (case str_indexof Char.isSpace raw of
               NONE => (SOME(trim_ast raw),
-                       ex_status raw)
+                       (ex_status raw) orelse
+                       (is_example line))
             | SOME i => let
                           val lang = String.substring(raw,0,i)
                         in
                           (SOME(trim_ast lang),
-                           ex_status(lang))
+                           (ex_status lang) orelse
+                           (is_example line))
                         end)
   end
   | pre_meta _ = (NONE, true); 
