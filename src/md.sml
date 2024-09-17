@@ -678,7 +678,7 @@ fun par (body : substring) =
         | SOME (i,_) => (let
                           val idx =
                             Int.min(Substring.size(body),i+1);
-                        in (Substring.slice(body, 0, SOME(idx)),
+                        in (Substring.slice(body, 0, SOME(i)),
                             Substring.slice(body, idx, NONE))
                         end);
   in
