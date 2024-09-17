@@ -256,14 +256,14 @@ fun skip_tex s len pos =
         then (case string_indexof_from "\\]" s (pos + 1) of
                   NONE => pos + 1
                 | SOME i => i + 2)
-        else if len > pos + size("begin{equation}") andalso
+        else if len > pos + 15 (* size("begin{equation}") *) andalso
                 EQUAL = String.compare(
                   String.substring(s, pos+1, 15),
                   "begin{equation}")
         then (case string_indexof_from "\\end{equation}" s (pos + 1) of
                   NONE => pos + 1
                 | SOME i => i + 14) (* i + size "\\end{equation}" *)
-        else if len > pos + size("begin{align}") andalso
+        else if len > pos + 12 (* size("begin{align}") *) andalso
                 EQUAL = String.compare(
                   String.substring(s, pos+1, 12),
                   "begin{align}")
@@ -425,10 +425,10 @@ Tests if the contents of the first line of the substring
 consists of space characters.
 *)
 fun blank_line (body : substring) =
-  case CharVectorSlice.findi (fn (i,c) => #"\n" = c) body of
-      NONE => CharVectorSlice.all Char.isSpace body
-    | SOME (i,_) => CharVectorSlice.all Char.isSpace
-                                        (Substring.slice (body, 0, SOME i));
+  Substring.isEmpty body orelse
+  Substring.isPrefix "\n" body orelse
+  (Char.isSpace (Substring.sub(body, 0)) andalso
+   blank_line (Substring.slice(body, 1, NONE)));
 
 (* next_line : substring -> substring
 
@@ -641,20 +641,11 @@ fun pre (body : substring) =
 (* NB: items start look like "[digit]+. .*",
    in particular it need not be sequential! *)
 fun starts_olist (body : substring) =
-  case CharVectorSlice.findi
-           (fn (i, c) =>
-               #"." = c andalso
-               (i + 1 < Substring.size body) andalso
-               Char.isSpace(Substring.sub(body, i + 1)))
-           body of
-      NONE => false
-    | SOME(i,_) =>
-      (Substring.size(body) > i + 1) andalso
-      (CharVectorSlice.all
-           Char.isDigit
-           (Substring.slice(body, 0, SOME i))) andalso
-      Char.isSpace(Substring.sub(body, i + 1));
-                            
+  Substring.size body > 2 andalso
+  Char.isDigit (Substring.sub(body,0)) andalso
+  (#"." = Substring.sub(body,1) orelse
+   starts_olist (Substring.slice(body, 1, NONE)));
+
 (* given the body to a paragraph, parse it to a list of inline
 fun par_body (lines : string list) =; *)
 fun starts_block (body : substring) =
@@ -733,6 +724,7 @@ fun blockquote (body : substring) =
 NOTE: paragraphs in a list MUST be properly indented. Blank
 lines are considered "terminators" for lists.
  *)
+(* XXX: slow, this could be optimized to improve performance *)
 and parse_list (lines : substring)
                (starts_item : substring -> bool) = 
   let
@@ -750,6 +742,7 @@ and parse_list (lines : substring)
             is_item (next_line line)))));
     *)
     (* trim_item : substring -> string *)
+    (* XXX: slow, this could be optimized to improve performance *)
     fun trim_item (lines : substring) =
         let
           val indent_size =
@@ -775,17 +768,6 @@ and parse_list (lines : substring)
                        else if is_item ls
                        then find_rest (next_line ls)
                        else ls;
-     (*
-     val (item_lines, rest) =
-      let
-        val r = find_rest lines;
-      in
-        case (Substring.base(r), Substring.base(lines)) of
-            ((_,idx,stop), (_,start,_)) =>
-            (Substring.slice(lines, 0, SOME (idx - start)),
-             r)
-      end;
-   *)
     val (item_lines, rest) =
       case CharVectorSlice.findi (fn (i,c) =>
                                      #"\n" = c andalso
@@ -800,12 +782,12 @@ and parse_list (lines : substring)
            Substring.slice(lines,i,NONE));
     (* form the list of lines in each item *)
     (* part_items : substring -> substring list -> substring list *)
+    (* XXX: slow, this could be optimized to improve performance *)
     fun part_items ls acc =
       if Substring.isEmpty ls
       then rev acc
       else (case CharVectorSlice.findi
                      (fn (i,c) => i > 0 andalso
-                                  Substring.size ls > 0 andalso
                                   Substring.sub(ls, i-1) = #"\n" andalso
                                   starts_item
                                       (Substring.slice(ls,i,NONE)))

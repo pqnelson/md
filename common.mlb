@@ -1,7 +1,5 @@
 $(SML_LIB)/basis/basis.mlb
 src/utils.sml
-src/lexer.sig
-src/lexer.sml
 src/inline.sig
 src/inline.sml
 src/block.sig
