@@ -533,10 +533,18 @@ fun is_example (line : substring) =
                              end)
                          entries;
   in
-    case (indexof (fn c => #"{" = c) line,
-          indexof (fn c => #"}" = c) line) of
-        (SOME i, SOME j) => (get (i+1) (SOME (j - i - 1)))
-      | _ => false 
+    not (Substring.isPrefix "\n" line) andalso
+    case indexof (fn c => #"\n" = c) line of
+        NONE => false
+      | k =>
+        let
+          val s = Substring.slice(line, 0, k)
+        in
+          (case (indexof (fn c => #"{" = c) s,
+                 indexof (fn c => #"}" = c) s) of
+               (SOME i, SOME j) => (get (i+1) (SOME (j - i - 1)))
+             | _ => false)
+        end
   end;
 
 (* pre_meta : substring -> string option * bool
@@ -586,7 +594,7 @@ fun pre_meta (body : substring) =
                    line of
               NONE => (NONE, false)
             | SOME(i,_) =>
-                 let
+              let
                    val lang = Substring.slice(line, 0, SOME i)
                  in
                    (SOME(trim_ast lang),
@@ -641,7 +649,7 @@ fun starts_olist (body : substring) =
            body of
       NONE => false
     | SOME(i,_) =>
-      (Substring.size(body) > i) andalso
+      (Substring.size(body) > i + 1) andalso
       (CharVectorSlice.all
            Char.isDigit
            (Substring.slice(body, 0, SOME i))) andalso
@@ -730,8 +738,8 @@ and parse_list (lines : substring)
   let
     (* is_item : substring -> bool *)
     fun is_item (line : substring) =
-      (Substring.sub(line, 0) <> #"\n" andalso
-       Substring.size(line) > 0 andalso
+      (Substring.size(line) > 0 andalso
+       Substring.sub(line, 0) <> #"\n" andalso
        (starts_item line orelse
         (* indented and nonblank line
            or else followed by a line in an item *)
@@ -797,6 +805,7 @@ and parse_list (lines : substring)
       then rev acc
       else (case CharVectorSlice.findi
                      (fn (i,c) => i > 0 andalso
+                                  Substring.size ls > 0 andalso
                                   Substring.sub(ls, i-1) = #"\n" andalso
                                   starts_item
                                       (Substring.slice(ls,i,NONE)))
@@ -898,15 +907,18 @@ fun extract_metadata (s : string) =
                                         | _ => acc))
                                  []
                                  lines;
-                val body = Substring.extract(s, idx+4, NONE);
+                val i = Int.min(idx+4,
+                                String.size s);
+                val body = Substring.extract(s, i, NONE);
               in
                 (meta, body)
               end);
 
+
 (* parse : string -> ((string * string) list) * (string Block list) *)
 fun parse (s : string) =
   let
-    val (metadata,body) = extract_metadata s;
+    val (metadata,body) = extract_metadata s
   in
     (metadata, parse_block body)
   end;

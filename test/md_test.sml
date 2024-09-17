@@ -301,7 +301,77 @@ val ul_test6 =
            ,"  failure, or error."
            ,"- We want to count the number of successes, failures, and errors which"
            ,"  occurred when running a test. For test cases, these will be at most"
-           ,"  1."]
+           ,"  1."];
+
+val ul_test7 =
+  ast_test "ul_test7"
+           [UList [[Par [Text "We want predicates testing if the test result records a success,\nfailure, or error."]]
+                  ,[Par [Text "We want to count the number of successes, failures, and errors which\noccurred when running a test. For test cases, these will be at most\n"]]],
+            Par [Text "This should be a paragraph."]]
+           ["- We want predicates testing if the test result records a success,"
+           ,"  failure, or error."
+           ,"- We want to count the number of successes, failures, and errors which"
+           ,"  occurred when running a test. For test cases, these will be at most"
+           ,"  "
+           ,"This should be a paragraph."];
+
+
+val ul_test8 =
+  ast_test "ul_test8"
+           [UList [[Par [Text "This is a list\nof various items"]]
+                  ,[Par [Text "Otherwise, we have to do:\n"]
+                   ,OList [[Par [Text "More work.\nThat sucks."]]
+                          ,[Par [Text "Or else we have the following\ncases.\n"]
+                           ,OList [[Par [Text "We think hard\nand we get paid for it"]]
+                                  ,[Par [Text "Then we write\nand write"]]]]]]]]
+           ["- This is a list",
+            "  of various items",
+            "- Otherwise, we have to do:",
+            "  1. More work.",
+            "     That sucks.",
+            "  2. Or else we have the following",
+            "     cases.",
+            "     1. We think hard",
+            "        and we get paid for it",
+            "     2. Then we write",
+            "        and write"
+           ];
+
+val ul_test9 =
+  ast_test "ul_test9"
+[Par [Text "The flow of logic is remarkably similar to the situation where we\nextracting an \"entry\" in the key-value pairs:\n"]
+,UList [[Par [Text "If the position for the next key-value pair is greater than the\nlength of the substring (representing the code block), then we raise\na runaway exception."]], [Par [Text "If the position for the next key-value pair is positive and the\ncharacter located there is equal to the close brace, then we're\ndone. We should return the accumulated list of key-value pairs and\nthe position of the close brace (or the length of the substring,\nwhichever is smaller)."]], [Par [Text "Otherwise, we get to the interesting part: there's work to be done. \n"], OList [[Par [Text "Extract the key using the ", Code "extract_entry", Text " invoked at the given\nposition. This will give us the key as a substring ", Emph [Text "and"], Text " the\nposition in the substring immediately after the key. We trim the\nwhitespace from the key, and turn it into a proper string."]], [Par [Text "Now we try to find the value. This itself decomposes into several\ncases.\n"], OList [[Par [Text "We have not exhausted the substring describing the code block,\nand we have run into a comma. This happens with ", Code "{foo, key = value,...}", Text "\nand we decided to treat this as ", Code "{foo = foo, ...}", Text ".\nThen we iterate, calling ", Code "extract_iter", Text " again but with the\nposition of the next character updated and pushing ", Code "(k,k)", Text " on\nthe accumulator"]], [Par [Text "We have not exhausted the substring and we have run into the\nclosing brace ", Code "}", Text " for the metadata. Then we just do as before,\ntreat the value as equal to the key, but we terminate the\nfunction returning ", Code "(k,k)::acc", Text " and the location where the\nclosing brace occurred."]]]]]]]]
+ ["The flow of logic is remarkably similar to the situation where we",
+"extracting an \"entry\" in the key-value pairs:",
+"",
+"- If the position for the next key-value pair is greater than the",
+"  length of the substring (representing the code block), then we raise",
+"  a runaway exception.",
+"- If the position for the next key-value pair is positive and the",
+"  character located there is equal to the close brace, then we're",
+"  done. We should return the accumulated list of key-value pairs and",
+"  the position of the close brace (or the length of the substring,",
+"  whichever is smaller).",
+"- Otherwise, we get to the interesting part: there's work to be done. ",
+"  1. Extract the key using the `extract_entry` invoked at the given",
+"     position. This will give us the key as a substring _and_ the",
+"     position in the substring immediately after the key. We trim the",
+"     whitespace from the key, and turn it into a proper string.",
+"  2. Now we try to find the value. This itself decomposes into several",
+"     cases.",
+"     1. We have not exhausted the substring describing the code block,",
+"        and we have run into a comma. This happens with `{foo, key = value,...}`",
+"        and we decided to treat this as `{foo = foo, ...}`.",
+"        Then we iterate, calling `extract_iter` again but with the",
+"        position of the next character updated and pushing `(k,k)` on",
+"        the accumulator",
+"     2. We have not exhausted the substring and we have run into the",
+"        closing brace `}` for the metadata. Then we just do as before,",
+"        treat the value as equal to the key, but we terminate the",
+"        function returning `(k,k)::acc` and the location where the",
+"        closing brace occurred.",
+""
+];
 
 val suite = Test.register_suite "md_test/" [
     Test.suite "block/" [
@@ -371,6 +441,9 @@ val suite = Test.register_suite "md_test/" [
     "",
     "Just some text"])
 , ul_test6
+, ul_test7
+, ul_test8
+, ul_test9
 , (ast_test "ol_test1"
             [OList [[Par [Text "This is an item"]],
                     [Par [Text "This is the second item"]]]]
