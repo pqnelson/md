@@ -163,31 +163,59 @@ fun inline_code s len start =
         end
     end;
 
+(* Given the substring `s` directly after the first occurrence
+of `left`, and stipulating the next character after the end of
+`s` is `right`, does this substring have an "accidentaly
+close"?
+
+Happens with links in Markdown:
+"[example] foo [link text](url)" should not match the leading
+bracket as the start of the link erroneously.
+
+See url_test2 and url_test3 for examples.
+*)
+fun is_balanced s left right =
+  (print ((Substring.string(s))^"\n");
+  (1, false) = (Substring.foldr
+                    (fn (c,(acc,closes_short)) =>
+                        if closes_short then (acc, closes_short)
+                        else if c = left then (acc + 1, closes_short)
+                        else if c = right then
+                          if acc - 1 <= 1
+                          then (0, true)
+                          else (acc - 1, closes_short)
+                        else (acc, closes_short))
+                    (1, false)
+                    s));
+
 fun carve_link s len pos =
-    if #"[" <> String.sub(s, pos)
-    then NONE
-    else
-      let
-        val prefix = if 0 = pos
-                     then NONE
-                     else SOME(String.substring(s, 0, pos));
-        val lexeme = String.extract(s, pos, NONE);
-      in
-        case string_indexof "](" lexeme of
-           NONE => NONE
-         | (SOME i) =>
-           let
-             val tail = String.extract(lexeme, i+2, NONE);
-           in
-             (case string_indexof ")" tail of
-                  NONE => NONE
-               | SOME j => (* (before, link_descr, url, rest) *)
-                 SOME (prefix,
-                       String.substring(lexeme,1,i-1),
-                       String.substring(tail,0, j),
-                       String.extract(tail,j+1,NONE)))
-           end
-      end;
+  if #"[" <> String.sub(s, pos)
+  then NONE
+  else
+    let
+      val prefix = if 0 = pos
+                   then NONE
+                   else SOME(String.substring(s, 0, pos));
+      val lexeme = String.extract(s, pos, NONE);
+    in
+      case string_indexof "](" lexeme of
+          NONE => NONE
+        | (SOME i) =>
+          if not (is_balanced (Substring.substring(lexeme, 1, i - 1)) #"[" #"]")
+          then NONE
+          else
+            let
+              val tail = String.extract(lexeme, i+2, NONE);
+            in
+              (case string_indexof ")" tail of
+                   NONE => NONE
+                 | SOME j => (* (before, link_descr, url, rest) *)
+                   SOME (prefix,
+                         String.substring(lexeme,1,i-1),
+                         String.substring(tail,0, j),
+                         String.extract(tail,j+1,NONE)))
+            end
+    end;
 
 fun try_img s len pos =
     if not (pos + 2 < len andalso
@@ -238,16 +266,16 @@ fun skip_tex s len pos =
   if pos >= len
   then len
   else if #"$" = String.sub(s,pos)
-  then (if len > pos + 1 andalso
-           #"$" = String.sub(s,pos+1)
+  then (if #"$" = String.sub(s,pos+1) andalso
+           len > pos + 1
         then (case string_indexof_from "$$" s (pos + 2) of
                   NONE => pos + 2
                 | SOME i => i + 2)
         else (case string_indexof_from "$" s (pos + 1) of
                   NONE => pos + 1
                 | SOME i => i + 1))
-  else if len > pos + 1 andalso
-          #"\\" = String.sub(s,pos)
+  else if #"\\" = String.sub(s,pos) andalso
+          len > pos + 1
   then (if #"(" = String.sub(s,pos+1)
         then (case string_indexof_from "\\)" s (pos + 1) of
                   NONE => pos + 1
@@ -664,23 +692,21 @@ ENSURES: result is (paragraph, rest)
 *)
 fun par (body : substring) =
   let
+    fun next_block (i,c) =
+      #"\n" = c andalso
+      i < Substring.size body andalso
+      starts_block (Substring.slice(body, i+1, NONE));
     val (ps, rest) =
-      case CharVectorSlice.findi
-               (fn (i,c) =>
-                   #"\n" = c andalso
-                   i < Substring.size body andalso
-                   starts_block (Substring.slice(body, i+1, NONE)))
-               body of
+      case CharVectorSlice.findi next_block body of
           NONE => (body,
                    Substring.slice(body,
                                    Substring.size body,
                                    NONE))
-        | SOME (i,_) => (let
-                          val idx =
-                            Int.min(Substring.size(body),i+1);
-                        in (Substring.slice(body, 0, SOME(i)),
-                            Substring.slice(body, idx, NONE))
-                        end);
+        | SOME (i,_) => (Substring.slice(body, 0, SOME(i)),
+                         Substring.slice(body,
+                                         Int.min(Substring.size(body),
+                                                 i+1),
+                                         NONE));
   in
     (Par (parse_inline (Substring.string ps)),
      rest)
@@ -744,25 +770,26 @@ and parse_list (lines : substring)
     (* trim_item : substring -> string *)
     (* XXX: slow, this could be optimized to improve performance *)
     fun trim_item (lines : substring) =
-        let
-          val indent_size =
-            (case CharVectorSlice.findi
-                      (fn (i,c) => Char.isSpace c)
-                      lines of
-                   SOME (i,_) => 1 + i
-                 | NONE => 3);
-          val indent = implode(List.tabulate (indent_size,
-                                              fn _ => #" "));
-          fun trim_line (line : substring) =
-              if Substring.size(line) >= indent_size
-              then Substring.slice(line, indent_size, NONE)
-              else line;
-        in
-          (((Substring.concatWith "\n") o
-            (map trim_line) o
-            (Substring.tokens (fn c => #"\n" = c)))
-               lines)
-        end;
+      let
+        fun get_indent_size s acc =
+          if Substring.isEmpty s
+          then acc
+          else if Char.isSpace (Substring.sub(s, 0))
+          then acc + 1
+          else get_indent_size (Substring.slice(s,1,NONE)) (acc+1);
+
+        val indent_size = get_indent_size lines 0;
+
+        fun trim_line (line : substring) =
+          if Substring.size(line) >= indent_size
+          then Substring.slice(line, indent_size, NONE)
+          else line;
+      in
+        (((Substring.concatWith "\n") o
+          (map trim_line) o
+          (Substring.tokens (fn c => #"\n" = c)))
+             lines)
+      end;
     (* separate the list from the rest of the Markdown *)
     fun find_rest ls = if Substring.isEmpty ls then ls
                        else if is_item ls

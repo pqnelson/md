@@ -242,6 +242,35 @@ val url_test1 =
                    Text " zzz"]]
              ["xxx [yyy](http://url.com) zzz"];
 
+val url_test2 =
+    ast_test "url_test2"
+             [Par [Text (String.concatWith "\n" ["Paul E. Black, 'dictionary', ",
+                   "in Dictionary of Algorithms and Data Structures (online),",
+                   "Paul E. Black, ed. 2 November 2020. (accessed 27 November 2024)", 
+                   "Available from: "]),
+                   Link { link_url = "https://www.nist.gov/dads/HTML/dictionary.html"
+                        , link_desc = [Text "https://www.nist.gov/dads/HTML/dictionary.html"]}
+                   ]]
+             ["Paul E. Black, 'dictionary', ",
+  "in Dictionary of Algorithms and Data Structures (online),",
+  "Paul E. Black, ed. 2 November 2020. (accessed 27 November 2024)", 
+  "Available from: [https://www.nist.gov/dads/HTML/dictionary.html](https://www.nist.gov/dads/HTML/dictionary.html)"];
+
+(* bug which actually happened :( *)
+val url_test3 =
+    ast_test "url_test3"
+             [Par [Text (String.concatWith "\n" ["Paul E. Black, 'dictionary', ",
+                   "in Dictionary of Algorithms and Data Structures [online],",
+                   "Paul E. Black, ed. 2 November 2020. (accessed 27 November 2024)", 
+                   "Available from: "]),
+                   Link { link_url = "https://www.nist.gov/dads/HTML/dictionary.html"
+                        , link_desc = [Text "https://www.nist.gov/dads/HTML/dictionary.html"]}
+                   ]]
+             ["Paul E. Black, 'dictionary', ",
+  "in Dictionary of Algorithms and Data Structures [online],",
+  "Paul E. Black, ed. 2 November 2020. (accessed 27 November 2024)", 
+  "Available from: [https://www.nist.gov/dads/HTML/dictionary.html](https://www.nist.gov/dads/HTML/dictionary.html)"];
+
 val anchor_test1 =
     ast_test "anchor_test1"
              [Par [Text "xxx ",
@@ -466,6 +495,8 @@ val suite = Test.register_suite "md_test/" [
   , inline_code_test3
   , inline_code_test4
   , url_test1
+  , url_test2
+  , url_test3
   , anchor_test1
   , img_test1
   ]
