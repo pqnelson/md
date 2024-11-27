@@ -271,6 +271,14 @@ val url_test3 =
   "Paul E. Black, ed. 2 November 2020. (accessed 27 November 2024)", 
   "Available from: [https://www.nist.gov/dads/HTML/dictionary.html](https://www.nist.gov/dads/HTML/dictionary.html)"];
 
+val url_test4 =
+    ast_test "url_test4"
+             [Par [Text "xxx ",
+                   Link { link_url = "https://en.wikipedia.org/wiki/Work_(thermodynamics)"
+                        , link_desc = [Text "yyy"]},
+                   Text " zzz"]]
+             ["xxx [yyy](https://en.wikipedia.org/wiki/Work_(thermodynamics)) zzz"];
+
 val anchor_test1 =
     ast_test "anchor_test1"
              [Par [Text "xxx ",
@@ -497,6 +505,7 @@ val suite = Test.register_suite "md_test/" [
   , url_test1
   , url_test2
   , url_test3
+  , url_test4
   , anchor_test1
   , img_test1
   ]

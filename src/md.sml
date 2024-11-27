@@ -187,6 +187,22 @@ fun is_balanced s left right =
                     (1, false)
                     s);
 
+(* find the end of the link, allowing for whacky wikipedia
+shenanigans like
+"https://en.wikipedia.org/wiki/Work_(thermodynamics)"
+
+TODO: think about replacing the parentheses? Perhaps that
+should be done by the HTML emitter...
+*)
+fun end_of_link s len pos acc =
+  if pos > len then NONE
+  else if #")" = String.sub(s, pos)
+  then (if 1 = acc then SOME pos
+        else end_of_link s len (pos + 1) (acc - 1))
+  else if #"(" = String.sub(s, pos)
+  then end_of_link s len (pos + 1) (acc + 1)
+  else end_of_link s len (pos + 1) acc;
+
 fun carve_link s len pos =
   if #"[" <> String.sub(s, pos)
   then NONE
@@ -206,7 +222,7 @@ fun carve_link s len pos =
             let
               val tail = String.extract(lexeme, i+2, NONE);
             in
-              (case string_indexof ")" tail of
+              (case end_of_link tail (size tail) 0 1 of
                    NONE => NONE
                  | SOME j => (* (before, link_descr, url, rest) *)
                    SOME (prefix,
