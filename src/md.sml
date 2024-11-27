@@ -175,7 +175,6 @@ bracket as the start of the link erroneously.
 See url_test2 and url_test3 for examples.
 *)
 fun is_balanced s left right =
-  (print ((Substring.string(s))^"\n");
   (1, false) = (Substring.foldr
                     (fn (c,(acc,closes_short)) =>
                         if closes_short then (acc, closes_short)
@@ -186,7 +185,7 @@ fun is_balanced s left right =
                           else (acc - 1, closes_short)
                         else (acc, closes_short))
                     (1, false)
-                    s));
+                    s);
 
 fun carve_link s len pos =
   if #"[" <> String.sub(s, pos)
