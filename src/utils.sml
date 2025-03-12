@@ -182,9 +182,14 @@ Transform a Markdown file name into an HTML file name.
 
 If the given string does not look like a Markdown file name,
 then we just return it back to the user. This makes it
-idempotent. 
+idempotent.
+
+ENSURES: is_md s andalso s is relative link
+         implies ".html" is suffix of result
+ENSURES: not (is_md s andalso s is relative link)
+         implies s = result
 *)
 fun md_to_html s =
-    if is_md s
+    if is_md s andalso not (String.isPrefix "http" s)
     then (String.substring(s, 0, String.size(s) - 2) ^ "html")
     else s;

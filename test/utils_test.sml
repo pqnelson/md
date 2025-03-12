@@ -71,7 +71,33 @@ val string_indexof_test2 =
                                     "expected to be 1 ",
                                     "actual: ",
                                     Int.toString(i)])
-             end);
+               end);
+
+val md_to_html_test1 =
+  Test.new "md_to_html_test1"
+           (fn () =>
+               let
+                 val s = "https://github.com/user/repo/README.md";
+                 val expected = s;
+                 val actual = (md_to_html s);
+               in
+                 Assert.eq expected actual
+                           ("EXPECTED: "^expected^"\n"^
+                            "FOUND: "^actual^"\n")
+               end);
+
+val md_to_html_test2 =
+  Test.new "md_to_html_test2"
+           (fn () =>
+               let
+                 val s = "README.md";
+                 val expected = "README.html";
+                 val actual = (md_to_html s);
+               in
+                 Assert.eq expected actual
+                           ("EXPECTED: "^expected^"\n"^
+                            "FOUND: "^actual^"\n")
+               end);
 
 val suite = Test.register_suite "utils_test/" [
   mk_string_trim_test "string_trim_test1" "foo" "  foo"
@@ -90,6 +116,8 @@ val suite = Test.register_suite "utils_test/" [
 , string_indexof_from_test1
 , string_indexof_test1
 , string_indexof_test2
-];
+, md_to_html_test1
+, md_to_html_test2
+  ];
 
 end;
