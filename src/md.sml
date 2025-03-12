@@ -117,13 +117,33 @@ to support both?
 @see https://pandoc.org/MANUAL.html#verbatim
 *)
 
+(* inline_code : string -> int -> int ->
+                (int, string option * string Inline.t * string) Either 
+
+If there is no code (i.e., this was a false-positive), this
+just returns the next position to try parsing.
+
+If this is code, then it returns
+- the [optional] text preceding the code snippet
+- the code snippet itself
+- the rest of the inline Markdown to be parsed.
+
+Supports multiple backticks as surrounding a valid code snippet.
+
+REQUIRES: String.size s = len
+REQUIRES: #"`" = String.sub(s,start)
+*)
 fun inline_code s len start =
   let
+    val is_escaped = start > 0 andalso
+                     #"\\" = String.sub(s, start - 1);
     val lexeme = String.extract(s, start, NONE);
     val prefix = if 0 = start
                  then NONE
                  else SOME(String.extract(s, 0, SOME start));
   in
+    if is_escaped then Left ~1
+    else
     case str_indexof (fn c => #"`" <> c) lexeme of
         NONE => Left 1
       | SOME i =>
@@ -430,7 +450,12 @@ and scan s len pos =
                          (scan rest (String.size rest) 0)
                        | NONE => scan s len (pos + 1))
           | #"`" => (case inline_code s len pos of
-                      Left i => scan s len (pos + i)
+                       Left i => if i < 0
+                                 then scan (String.substring(s,0,pos-1) ^
+                                            String.extract(s, pos, NONE))
+                                           len
+                                           pos
+                                 else scan s len (pos + i)
                       | Right(NONE,code,rest) =>
                         code::(scan rest (String.size rest) 0)
                       | Right(SOME t,code,rest) =>

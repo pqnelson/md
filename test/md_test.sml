@@ -234,6 +234,25 @@ val inline_code_test4 =
 , "when `tangle` is invoked, and have `weave` link back to the code block"
 , "defining this code chunk."];
 
+val inline_code_test5 =
+  ast_test "inline_code_test5"
+             [Par [Text "If I want to include 'named code chunks' as WEB,\nCWEB, and NOWEB all support --- with `<<code chunk name>>=` as the first\nline following the ",
+                   Code "```language",
+                   Text " declaration --- then I need to make\nsure I replace all instances of ",
+                   Code "<<code chunk name>>",
+                   Text " with its contents\nwhen ",
+                   Code "tangle",
+                   Text " is invoked, and have ",
+                   Code "weave",
+                   Text " link back to the code block\ndefining this code chunk."
+             ]]
+             ["If I want to include 'named code chunks' as WEB,"
+, "CWEB, and NOWEB all support --- with \\`<<code chunk name>>=\\` as the first"
+, "line following the `` ```language `` declaration --- then I need to make"
+, "sure I replace all instances of `<<code chunk name>>` with its contents"
+, "when `tangle` is invoked, and have `weave` link back to the code block"
+, "defining this code chunk."];
+
 val url_test1 =
     ast_test "url_test1"
              [Par [Text "xxx ",
@@ -502,6 +521,7 @@ val suite = Test.register_suite "md_test/" [
   , inline_code_test2
   , inline_code_test3
   , inline_code_test4
+  , inline_code_test5
   , url_test1
   , url_test2
   , url_test3
