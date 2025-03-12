@@ -133,7 +133,7 @@ fun include_css_files [] output_path = ""
            "href=\""^(OS.Path.mkRelative
                           { path = css_file
                           , relativeTo = output_dir
-                     })^"\" />");
+                     })^"\">");
     in
       String.concatWith "\n" (map emit_link css_files)
     end;
