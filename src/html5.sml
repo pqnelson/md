@@ -37,6 +37,11 @@ fun pprint s =
           (* order matters, tries from left to right *)
           [ ("---", "&mdash;")
           , ("--", "&ndash;")
+          (* comments must be preserved *)
+          , ("<!&ndash;", "<!--")
+          , ("&ndash;>", "-->")
+          , ("<!&mdash;", "<!---")
+          , ("&mdash;>", "--->")
           , ("...", "&hellip;")
           ];
 
