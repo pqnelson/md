@@ -7,4 +7,5 @@ src/block.sml
 src/md.sig
 src/md.sml
 src/emitter.sig
+src/sml_highlighter.sml
 src/html5.sml

@@ -5,5 +5,5 @@ signature EMITTER = sig
   should also perform any HTML escapes (or analogous
   preprocessing) in addition to formatting.
    *)
-  val emit : (string -> string) -> string Block list -> string;
+  val emit : (string -> string -> string) -> string Block list -> string;
 end;

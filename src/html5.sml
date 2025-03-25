@@ -22,6 +22,25 @@ val escape_html =
                    | #"\\" => "&bsol;&#xfeff;" 
                    | c => String.str c);
 
+fun crude_highlight "sml" src =
+  (SmlHighlighter.emit_html5 o SmlHighlighter.tokenize) src
+    (* foldl (fn ((raw,replace),acc) => *)
+    (*           string_replace_all raw acc replace) *)
+    (*       (escape_html src) *)
+    (*       (* order matters, tries from left to right *) *)
+    (*       [ ("(*", "<span class=\"c\">(*") *)
+    (*       , ("*)", "*)</span>") *)
+    (*       ] *)
+  | crude_highlight "css" src = 
+    foldl (fn ((raw,replace),acc) =>
+              string_replace_all raw acc replace)
+          (escape_html src)
+          (* order matters, tries from left to right *)
+          [ ("/*", "<span class=\"c\">/*")
+          , ("*/", "*/</span>")
+          ]
+  | crude_highlight lang src = escape_html src; 
+
 (* pprint : string -> string
 
 Takes a text string which will appear in part of a non-code
@@ -72,9 +91,9 @@ fun emit_inline elt =
                                      "\" />");
 
 (*
-emit_block : ('a -> string) -> 'a Block -> string
+emit_block : (string -> 'a -> string) -> 'a Block -> string
 
-...where (syntax_highlight : 'a -> string) is the first
+...where (syntax_highlight : string -> 'a -> string) is the first
 argument.
 
 Note that `<pre>` should NOT have a newline separating it from
@@ -99,7 +118,7 @@ fun emit_block syntax_highlight block =
                     (concat (map emit_inline elts)) ^
                     "\n</p>\n"))
       | (Pre {code,language=NONE,...}) => ("\n<pre>"^
-                                           (syntax_highlight code) ^
+                                           (syntax_highlight "" code) ^
                                            "</pre>\n")
       | Pre {code,language=SOME lang,is_example} =>
         ("\n<pre data-lang=\"" ^
@@ -107,7 +126,7 @@ fun emit_block syntax_highlight block =
          "\" class=\"" ^
          (if is_example then "example" else "src") ^
          "\">" ^
-         (syntax_highlight code) ^
+         (syntax_highlight lang code) ^
          "</pre>\n")
       | Heading (lvl, title) =>
         ("\n<h" ^
@@ -165,6 +184,8 @@ fun add_title metadata header =
         [] => header
       | (_,title)::_ => "<title>"^(title)^"</title>\n"^header;
 
+(* TODO: replace the escape_html function with a more generic
+syntax highlighter. *)
 fun html5 (s : string) (header : string) (footer : string) =
     let
       val (metadata, body) = Md.parse s;
@@ -173,11 +194,11 @@ fun html5 (s : string) (header : string) (footer : string) =
       (add_title metadata header) ^
       "\n</head>\n<body>\n" ^
       "<main>\n" ^
-      (Html5.emit escape_html body) ^
+      (Html5.emit crude_highlight body) ^
       "\n" ^
       footer ^
       "</main>\n" ^
       "\n</body>\n" ^
       "</html>\n"
     end;
-        
+
